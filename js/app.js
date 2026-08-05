@@ -1,10 +1,11 @@
-// TypeClimber Main Application Coordinator (V3 Human-Crafted Engine)
+// TypeClimber Main Application Coordinator with WebRTC & Local Network P2P Multiplayer
 
 import { StorageManager } from './managers/StorageManager.js';
 import { SoundManager } from './engine/SoundManager.js';
 import { MountainRenderer } from './engine/MountainRenderer.js';
 import { TypingEngine } from './engine/TypingEngine.js';
 import { AIOpponent } from './engine/AIOpponent.js';
+import { WebRTCManager } from './engine/WebRTCManager.js';
 import { GameModeManager } from './managers/GameModeManager.js';
 import { UIManager } from './managers/UIManager.js';
 import { COSMETICS_DATABASE } from './data/cosmetics.js';
@@ -20,6 +21,7 @@ class TypeClimberApp {
     this.renderer = null;
     this.typingEngine = null;
     this.ai = null;
+    this.webrtc = new WebRTCManager(this);
 
     this.playerAltitude = 0;
     this.aiAltitude = 0;
@@ -62,12 +64,11 @@ class TypeClimberApp {
 
     const promptDisplay = document.getElementById("typing-prompt-display");
     
-    // Initialize Typing Engine with callbacks
+    // Initialize Typing Engine
     this.typingEngine = new TypingEngine({
       onRender: (html) => {
         if (promptDisplay) promptDisplay.innerHTML = html;
       },
-      // FIRST KEYSTROKE RACE TRIGGER!
       onFirstKey: () => {
         this.startRaceClock();
       },
@@ -78,9 +79,8 @@ class TypeClimberApp {
         }
         this.updateGameplayMetrics();
       },
-      onError: (char) => {
+      onError: () => {
         this.sound.playErrorSound();
-        // Trigger camera shake & climber slip jitter
         if (this.renderer) {
           this.renderer.triggerTypoShake();
         }
@@ -101,6 +101,53 @@ class TypeClimberApp {
     });
 
     this.bindKeyboardInput();
+    this.bindMultiplayerLobby();
+  }
+
+  bindMultiplayerLobby() {
+    const btnHost = document.getElementById("btn-host-local-room");
+    const btnJoin = document.getElementById("btn-join-local-room");
+    const inputJoin = document.getElementById("input-join-code");
+    const codeDisplay = document.getElementById("host-code-display");
+    const codeVal = document.getElementById("host-code-val");
+
+    if (btnHost) {
+      btnHost.addEventListener("click", () => {
+        const roomCode = this.webrtc.hostRoom(() => {
+          if (codeDisplay) codeDisplay.classList.remove("hidden");
+          if (codeVal) codeVal.textContent = roomCode;
+          this.ui.showToast(`Hosted Room: ${roomCode}. Tell coworker to enter code!`);
+        });
+      });
+    }
+
+    if (btnJoin) {
+      btnJoin.addEventListener("click", () => {
+        const code = (inputJoin ? inputJoin.value : "").trim();
+        if (!code) {
+          this.ui.showToast("Please enter room code!");
+          return;
+        }
+        this.webrtc.joinRoom(code, () => {
+          this.ui.showToast(`Connected to Room ${code}! Starting Duel...`);
+          this.startGame("duel", "rocky-cliffs", "medium");
+        });
+      });
+    }
+
+    // WebRTC Real-Time Opponent Position Callback
+    this.webrtc.onPeerProgress = (ratio, alt, wpm) => {
+      this.aiAltitude = alt;
+      this.updateAltitudeHUD();
+      if (this.renderer) {
+        this.renderer.updateProgress(this.playerAltitude / this.modeManager.currentMountain.altitude, ratio);
+      }
+    };
+
+    this.webrtc.onPeerConnected = () => {
+      this.ui.showToast("Coworker Connected! Launching Match...");
+      this.startGame("duel", "rocky-cliffs", "medium");
+    };
   }
 
   toggleMute() {
@@ -147,7 +194,6 @@ class TypeClimberApp {
     });
   }
 
-  // Active Game Launch
   startGame(mode = "campaign", mountainId = "green-hills", difficulty = "medium") {
     this.isGameActive = true;
     this.isPaused = false;
@@ -158,19 +204,16 @@ class TypeClimberApp {
     const readyBanner = document.getElementById("ready-start-banner");
     if (readyBanner) readyBanner.classList.remove("started");
 
-    // 1. Setup Mode & Passages
     this.modeManager.setupMatch(mode, mountainId, difficulty);
     const m = this.modeManager.currentMountain;
 
-    // 2. Setup HUD Overlays
-    document.getElementById("active-mountain-name").textContent = (mode === "boulder") ? "Boulder Arcade" : (mode === "sprint") ? "Speed Sprint" : (mode === "zen") ? "Zen Practice" : m.name;
+    document.getElementById("active-mountain-name").textContent = (mode === "boulder") ? "Boulder Arcade" : (mode === "sprint") ? "Speed Sprint" : (mode === "zen") ? "Zen Practice" : (mode === "duel") ? "Local WiFi Duel" : m.name;
     const diffTag = document.getElementById("active-mountain-diff");
     if (diffTag) {
       diffTag.textContent = difficulty.toUpperCase();
       diffTag.className = `diff-tag diff-badge ${difficulty}`;
     }
 
-    // 3. Setup Canvas Renderer & Cosmetics
     const p = this.storage.data.player;
     const findCos = (cat, id) => COSMETICS_DATABASE.find(c => c.category === cat && c.id === id);
 
@@ -192,28 +235,24 @@ class TypeClimberApp {
 
     this.sound.startAmbience(m.weather);
 
-    // 4. Prepare AI Opponent (Deferred start until first key typed!)
-    this.ai = new AIOpponent(m.aiSpeedWpm, "AI Bot");
-    this.ai.prepare((aiRatio) => {
-      this.aiAltitude = Math.round(aiRatio * m.altitude);
-      this.updateAltitudeHUD();
-      if (this.aiAltitude >= m.altitude && mode !== "freeplay" && mode !== "zen") {
-        this.endMatch(false);
-      }
-    });
+    if (mode !== "duel") {
+      this.ai = new AIOpponent(m.aiSpeedWpm, "AI Bot");
+      this.ai.prepare((aiRatio) => {
+        this.aiAltitude = Math.round(aiRatio * m.altitude);
+        this.updateAltitudeHUD();
+        if (this.aiAltitude >= m.altitude && mode !== "freeplay" && mode !== "zen") {
+          this.endMatch(false);
+        }
+      });
+    }
 
-    // 5. Load First Passage on Millisecond 0!
     this.loadPassage(this.modeManager.getActivePassage());
-
-    // 6. Switch Viewport Screen instantly to #game-screen
     this.ui.showScreen("game-screen");
 
-    // 7. Focus hidden input for instant typing
     const hiddenInput = document.getElementById("typing-hidden-input");
     if (hiddenInput) hiddenInput.focus();
   }
 
-  // Triggered on VERY FIRST KEYSTROKE
   startRaceClock() {
     if (this.raceStarted) return;
     this.raceStarted = true;
@@ -221,7 +260,7 @@ class TypeClimberApp {
     const readyBanner = document.getElementById("ready-start-banner");
     if (readyBanner) readyBanner.classList.add("started");
 
-    if (this.ai && this.modeManager.currentMode !== "zen") {
+    if (this.ai && this.modeManager.currentMode !== "zen" && this.modeManager.currentMode !== "duel") {
       this.ai.start();
     }
 
@@ -262,8 +301,14 @@ class TypeClimberApp {
 
     this.updateAltitudeHUD();
 
+    const pRatio = this.playerAltitude / m.altitude;
     if (this.renderer) {
-      this.renderer.updateProgress(this.playerAltitude / m.altitude, this.aiAltitude / m.altitude);
+      this.renderer.updateProgress(pRatio, this.aiAltitude / m.altitude);
+    }
+
+    // Send WebRTC real-time update to coworker!
+    if (this.webrtc && this.webrtc.isConnected) {
+      this.webrtc.sendRaceUpdate(pRatio, this.playerAltitude, wpm);
     }
   }
 

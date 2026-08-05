@@ -162,7 +162,7 @@
             </div>
             <div class="world-card-body">
               <h3>Live Arena Duel</h3>
-              <p>Matchmaking lobby, room codes, and local pass-and-play duel.</p>
+              <p>Local WiFi room codes, P2P duel, and local pass-and-play duel.</p>
               <button class="btn btn-sm card-play-btn">Enter Arena ➔</button>
             </div>
           </div>
@@ -543,27 +543,40 @@
         </div>
       </section>
 
-      <!-- 9. MULTIPLAYER ARENA LOBBY SCREEN -->
+      <!-- 9. MULTIPLAYER ARENA & LOCAL WIFI ROOM LOBBY -->
       <section id="multiplayer-screen" class="screen">
         <div class="screen-header">
-          <h2>Multiplayer Arena & Pass-and-Play</h2>
-          <p>Race live opponents or host custom private duel rooms.</p>
+          <h2>Local WiFi / Same Network Arena</h2>
+          <p>Host or join a room code to race your coworker over local WiFi or WebRTC peer connection.</p>
         </div>
 
         <div class="multiplayer-container scrollable-content">
           <div class="lobby-card-box featured-lobby">
-            <div class="lobby-badge">PUBLIC MATCHMAKING</div>
-            <h3>Ranked & Casual Quick Race</h3>
-            <p>Join global matchmaking queues to race live ghost opponents in real-time.</p>
+            <div class="lobby-badge">LOCAL WIFI & P2P DUEL</div>
+            <h3>Host Local Room (Give Code to Coworker)</h3>
+            <p>Generate a local 4-letter room code for your coworker to join over the same network.</p>
             <div class="lobby-actions">
-              <button id="btn-start-ranked-match" class="btn primary-game-btn">Find Ranked Race ➔</button>
+              <button id="btn-host-local-room" class="btn primary-game-btn">Host Room Code ➔</button>
+            </div>
+            <div id="host-code-display" class="room-code-badge hidden">
+              CODE: <span id="host-code-val" class="code-val">PEAK-42</span>
+              <span class="code-sub">Share this code with your coworker!</span>
             </div>
           </div>
 
           <div class="lobby-card-box">
-            <h3>Local Pass & Play Duel</h3>
-            <p>Race side-by-side against a friend on the same keyboard.</p>
-            <button id="btn-start-local-duel" class="btn secondary-game-btn">Start Local Duel ➔</button>
+            <h3>Join Coworker's Room Code</h3>
+            <p>Enter your coworker's 4-letter room code to connect directly over local WiFi.</p>
+            <div class="join-room-row">
+              <input type="text" id="input-join-code" placeholder="Enter PEAK-XXXX" class="code-input" maxlength="9">
+              <button id="btn-join-local-room" class="btn secondary-game-btn">Join Room ➔</button>
+            </div>
+          </div>
+
+          <div class="lobby-card-box">
+            <h3>Same Keyboard Pass & Play</h3>
+            <p>Race side-by-side on the exact same laptop or desktop keyboard.</p>
+            <button id="btn-start-local-duel" class="btn secondary-game-btn">Start Keyboard Duel ➔</button>
           </div>
         </div>
       </section>
