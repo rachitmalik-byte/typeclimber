@@ -1,11 +1,10 @@
-// Human-Crafted 2D Vertical Climbing Wall & Parallax Physics Engine
+// 5-Layer Environmental Parallax & Mascot Climber Canvas Rendering Engine
 
 export class MountainRenderer {
   constructor(canvasElement) {
     this.canvas = canvasElement;
     this.ctx = canvasElement.getContext('2d');
 
-    // Smooth Spring Physics Positions
     this.playerVisualProgress = 0; // 0.0 to 1.0
     this.aiVisualProgress = 0;     // 0.0 to 1.0
 
@@ -24,6 +23,7 @@ export class MountainRenderer {
 
     this.animFrameId = null;
     this.climbCycle = 0;
+    this.idleBreathe = 0;
 
     this.playerCosmetics = {
       skin: "🧗‍♂️",
@@ -51,6 +51,10 @@ export class MountainRenderer {
     this.startLoop();
   }
 
+  setCosmetics(cosmetics) {
+    this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
+  }
+
   resize() {
     if (!this.canvas) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
@@ -58,12 +62,11 @@ export class MountainRenderer {
     this.canvas.height = rect.height;
   }
 
-  // Generate procedural climbing holds up the wall
   generateClimbingHolds() {
     this.playerHolds = [];
     this.aiHolds = [];
 
-    const holdCount = 30; // 30 holds from base to summit
+    const holdCount = 32;
     const h = this.canvas.height;
     const startY = h - 60;
     const summitY = 70;
@@ -77,7 +80,6 @@ export class MountainRenderer {
       const ratio = i / holdCount;
       const baseHoldY = startY - (ratio * distY);
 
-      // Slight horizontal jitter for natural hold layout
       const pOffsetX = (Math.sin(i * 1.5) * 16);
       const aiOffsetX = (Math.cos(i * 1.5) * 16);
 
@@ -105,27 +107,26 @@ export class MountainRenderer {
   }
 
   triggerTypoShake() {
-    this.screenShakeTime = 12; // 12 frames camera shake
-    this.playerSlipJitter = 15; // horizontal slip offset
+    this.screenShakeTime = 14;
+    this.playerSlipJitter = 16;
   }
 
   emitChalkDust(x, y) {
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       this.chalkDustParticles.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 3,
-        vy: (Math.random() - 0.5) * 3 - 1,
+        vx: (Math.random() - 0.5) * 3.5,
+        vy: (Math.random() - 0.5) * 3.5 - 1.2,
         radius: Math.random() * 4 + 2,
-        alpha: 0.8,
-        color: 'rgba(248, 250, 252, ' // chalk white
+        alpha: 0.85
       });
     }
   }
 
   initWeatherParticles() {
     this.particles = [];
-    const count = 50;
+    const count = 60;
     for (let i = 0; i < count; i++) {
       this.particles.push({
         x: Math.random() * this.canvas.width,
@@ -158,23 +159,20 @@ export class MountainRenderer {
 
   updatePhysics() {
     this.climbCycle += 0.08;
+    this.idleBreathe += 0.04;
 
-    // Smooth Spring Easing for Climber Movement
     const oldPlayerVisual = this.playerVisualProgress;
     this.playerVisualProgress += (this.playerTargetProgress - this.playerVisualProgress) * 0.15;
     this.aiVisualProgress += (this.aiTargetProgress - this.aiVisualProgress) * 0.15;
 
-    // Emit chalk dust on hold landing
     if (Math.abs(this.playerVisualProgress - oldPlayerVisual) > 0.02) {
       const activeHold = this.getActiveHold(true);
       if (activeHold) this.emitChalkDust(activeHold.x, activeHold.y);
     }
 
-    // Decay shake and slip jitter
     if (this.screenShakeTime > 0) this.screenShakeTime--;
     if (this.playerSlipJitter > 0) this.playerSlipJitter *= 0.85;
 
-    // Update chalk particles
     this.chalkDustParticles.forEach((p, idx) => {
       p.x += p.vx;
       p.y += p.vy;
@@ -199,7 +197,6 @@ export class MountainRenderer {
 
     this.ctx.save();
 
-    // Camera Screen Shake on Typo
     if (this.screenShakeTime > 0) {
       const dx = (Math.random() - 0.5) * 8;
       const dy = (Math.random() - 0.5) * 8;
@@ -208,24 +205,25 @@ export class MountainRenderer {
 
     this.ctx.clearRect(0, 0, w, h);
 
-    // 1. LAYER 1: Distant Sky & Clouds (10% Speed)
+    // 1. LAYER 1: Celestial Sky Layer
     this.drawSkyLayer(w, h);
 
-    // 2. LAYER 2: Distant Alpine Mountain Ridges (35% Speed)
-    this.drawDistantMountainLayer(w, h);
+    // 2. LAYER 2: Distant Alpine Mountain Ridges
+    this.drawDistantMountains(w, h);
 
-    // 3. LAYER 3: Immediate Rock Wall Face & Climbing Holds (100% Speed)
+    // 3. LAYER 3: Midground Environmental Pine Trees
+    this.drawPineTrees(w, h);
+
+    // 4. LAYER 4: Foreground Climbing Wall & Holds
     this.drawRockWallLayer(w, h);
     this.drawClimbingHolds();
-
-    // 4. Ropes & Summit Flag
     this.drawRopesAndSummit(w, h);
 
-    // 5. 2D Vector Climber Figures (Snapped to Holds!)
-    this.drawVectorClimber(true);  // Player Climber
-    this.drawVectorClimber(false); // AI Opponent Climber
+    // 5. Mascot Climbers (Player & AI)
+    this.drawMascotClimber(true);
+    this.drawMascotClimber(false);
 
-    // 6. Chalk Dust & Weather Particles
+    // 6. LAYER 5: Weather & Volumetric Fog
     this.drawParticles(w, h);
 
     this.ctx.restore();
@@ -233,7 +231,7 @@ export class MountainRenderer {
 
   drawSkyLayer(w, h) {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(0, '#0b1120');
     grad.addColorStop(0.5, '#1e293b');
     grad.addColorStop(1, '#090d16');
 
@@ -241,14 +239,14 @@ export class MountainRenderer {
     this.ctx.fillRect(0, 0, w, h);
   }
 
-  drawDistantMountainLayer(w, h) {
+  drawDistantMountains(w, h) {
     const scrollOffset = (this.playerVisualProgress * h * 0.35);
 
-    this.ctx.fillStyle = "rgba(30, 41, 59, 0.6)";
+    this.ctx.fillStyle = "rgba(30, 41, 59, 0.65)";
     this.ctx.beginPath();
     this.ctx.moveTo(0, h);
-    this.ctx.lineTo(0, h * 0.4 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.25, h * 0.2 + scrollOffset * 0.1);
+    this.ctx.lineTo(0, h * 0.45 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.25, h * 0.25 + scrollOffset * 0.1);
     this.ctx.lineTo(w * 0.55, h * 0.45 + scrollOffset * 0.1);
     this.ctx.lineTo(w * 0.8, h * 0.25 + scrollOffset * 0.1);
     this.ctx.lineTo(w, h * 0.4 + scrollOffset * 0.1);
@@ -257,17 +255,30 @@ export class MountainRenderer {
     this.ctx.fill();
   }
 
+  drawPineTrees(w, h) {
+    // Environmental Pine Trees at Base
+    this.ctx.fillStyle = "rgba(6, 95, 70, 0.5)"; // Alpine green
+    for (let x = 20; x < w; x += 60) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, h);
+      this.ctx.lineTo(x + 15, h - 50);
+      this.ctx.lineTo(x + 30, h);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+  }
+
   drawRockWallLayer(w, h) {
     const wallMargin = w * 0.25;
 
-    // Player Climbing Track Wall
+    // Player Track Wall
     this.ctx.fillStyle = "#1e293b";
     this.ctx.fillRect(wallMargin - 55, 0, 110, h);
 
-    // AI Climbing Track Wall
+    // AI Track Wall
     this.ctx.fillRect((w - wallMargin) - 55, 0, 110, h);
 
-    // Wall Texture Grain Lines
+    // Wall Texture Lines
     this.ctx.strokeStyle = "rgba(248, 250, 252, 0.05)";
     this.ctx.lineWidth = 1;
     for (let y = 0; y < h; y += 30) {
@@ -299,14 +310,14 @@ export class MountainRenderer {
 
         this.ctx.fill();
 
-        // Chalk mark on hold
+        // Chalk Mark on Hold
         this.ctx.fillStyle = "rgba(248, 250, 252, 0.4)";
         this.ctx.fillRect(hold.x - 4, hold.y - 2, 8, 3);
       });
     };
 
-    drawHoldList(this.playerHolds, "#38bdf8"); // Sky Blue holds
-    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red holds
+    drawHoldList(this.playerHolds, "#38bdf8"); // Ice Blue
+    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red
   }
 
   drawRopesAndSummit(w, h) {
@@ -346,8 +357,8 @@ export class MountainRenderer {
     this.ctx.stroke();
   }
 
-  // Render Vector Articulated 2D Climber Snapped to Hold
-  drawVectorClimber(isPlayer) {
+  // Render Mascot Climber Snapped to Hold
+  drawMascotClimber(isPlayer) {
     const activeHold = this.getActiveHold(isPlayer);
     if (!activeHold) return;
 
@@ -355,38 +366,38 @@ export class MountainRenderer {
     let y = activeHold.y;
 
     if (isPlayer) {
-      x += this.playerSlipJitter; // Apply typo slip jitter if mistake made
+      x += this.playerSlipJitter;
     }
 
     this.ctx.save();
-    this.ctx.translate(x, y);
+    
+    // Idle breathing offset
+    const breatheY = Math.sin(this.idleBreathe) * 2;
+    this.ctx.translate(x, y + breatheY);
 
-    const bodyColor = isPlayer ? "#10b981" : "#ef4444"; // Moss Green or Rust Red
+    const bodyColor = isPlayer ? "#10b981" : "#ef4444";
     const limbColor = isPlayer ? "#38bdf8" : "#f8fafc";
 
-    // Dynamic arm reach cycle
     const reachOffset = Math.sin(this.climbCycle * 2) * (isPlayer && this.playerTargetProgress > 0 ? 6 : 2);
 
-    // 1. Arms reaching up to hold
+    // 1. Reaching Arms
     this.ctx.strokeStyle = limbColor;
     this.ctx.lineWidth = 4;
     this.ctx.lineCap = "round";
 
-    // Left Arm
     this.ctx.beginPath();
     this.ctx.moveTo(-6, 8);
     this.ctx.lineTo(-12, -8 + reachOffset);
     this.ctx.lineTo(0, -activeHold.size / 2);
     this.ctx.stroke();
 
-    // Right Arm
     this.ctx.beginPath();
     this.ctx.moveTo(6, 8);
     this.ctx.lineTo(12, -8 - reachOffset);
     this.ctx.lineTo(0, -activeHold.size / 2);
     this.ctx.stroke();
 
-    // 2. Torso / Body
+    // 2. Torso
     this.ctx.fillStyle = bodyColor;
     this.ctx.beginPath();
     this.ctx.roundRect(-8, 6, 16, 22, 4);
@@ -398,23 +409,28 @@ export class MountainRenderer {
     this.ctx.arc(0, 0, 7, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // 4. Legs pushing off lower wall
+    // 4. Mascot Expressive Eyes
+    this.ctx.fillStyle = "#0b1120";
+    this.ctx.beginPath();
+    this.ctx.arc(-2, -1, 1.5, 0, Math.PI * 2);
+    this.ctx.arc(2, -1, 1.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 5. Legs
     this.ctx.strokeStyle = bodyColor;
     this.ctx.lineWidth = 4;
     
-    // Left Leg
     this.ctx.beginPath();
     this.ctx.moveTo(-5, 28);
     this.ctx.lineTo(-10, 42);
     this.ctx.stroke();
 
-    // Right Leg
     this.ctx.beginPath();
     this.ctx.moveTo(5, 28);
     this.ctx.lineTo(10, 40);
     this.ctx.stroke();
 
-    // 5. Label Tag
+    // 6. Label Tag
     this.ctx.font = "700 10px Inter, sans-serif";
     this.ctx.fillStyle = isPlayer ? "#10b981" : "#ef4444";
     this.ctx.textAlign = "center";
@@ -424,7 +440,6 @@ export class MountainRenderer {
   }
 
   drawParticles(w, h) {
-    // Render Weather Particles
     this.ctx.save();
     this.particles.forEach(p => {
       p.x += p.speedX;
@@ -440,9 +455,8 @@ export class MountainRenderer {
       this.ctx.fill();
     });
 
-    // Render Chalk Dust Particles
     this.chalkDustParticles.forEach(p => {
-      this.ctx.fillStyle = `${p.color}${p.alpha})`;
+      this.ctx.fillStyle = `rgba(248, 250, 252, ${p.alpha})`;
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       this.ctx.fill();

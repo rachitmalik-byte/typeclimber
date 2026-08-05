@@ -3,129 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TypeClimber — Bespoke Mountain Typing Racer</title>
-  <meta name="description" content="A human-crafted, high-fidelity competitive typing game up steep vertical rock walls. Modern spiritual successor to Cliffhanger.">
+  <title>TypeClimber — Mountain Expedition Typing Adventure</title>
+  <meta name="description" content="A commercial-grade mountain climbing typing adventure game. Race AI rival climbers up vertical granite peaks with speed, precision, and rhythm.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="theme-earthy">
+<body class="theme-indie">
   <div id="app" class="app-container">
     
-    <!-- Top Global Editorial Header -->
-    <header class="global-header">
+    <!-- Atmospheric Ambient Layer Overlay -->
+    <div class="ambient-fog-layer"></div>
+
+    <!-- Handcrafted Game Header -->
+    <header class="global-header game-header">
       <div class="header-left">
         <button id="global-back-btn" class="nav-back-btn hidden" aria-label="Go Back">
-          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          Back
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Map</span>
         </button>
+        
         <!-- Logo click navigates directly to Home -->
-        <div id="global-logo-home" class="logo-group" title="Go to Home Screen">
-          <svg class="mountain-logo-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
-          <span class="logo-text">TYPE<span class="highlight">CLIMBER</span></span>
+        <div id="global-logo-home" class="logo-group game-logo" title="Return to Expedition Base Camp">
+          <div class="logo-emblem">
+            <svg class="mountain-emblem-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
+          </div>
+          <div class="logo-text-stack">
+            <span class="logo-title">TYPE<span class="highlight">CLIMBER</span></span>
+            <span class="logo-sub">EXPEDITION EDITION</span>
+          </div>
         </div>
       </div>
       
       <div class="header-right">
-        <div class="user-stats-pill">
-          <div class="stat-badge coin-badge">
-            <span class="label-tiny">COINS</span>
-            <span id="player-coins-display" class="val-bold">0</span>
+        <div class="game-stats-pill">
+          <div class="stat-item coin-item">
+            <span class="item-icon">🪙</span>
+            <span id="player-coins-display" class="item-val">0</span>
           </div>
-          <div class="stat-badge xp-badge">
-            <span class="label-tiny">RANK</span>
-            <span id="player-level-display" class="val-bold">Lvl 1</span>
+          <div class="stat-item rank-item">
+            <span class="item-icon">⭐</span>
+            <span id="player-level-display" class="item-val">Lvl 1</span>
           </div>
         </div>
-        <button id="quick-mute-btn" class="icon-btn muted" title="Audio (Muted by default)">
+
+        <button id="quick-mute-btn" class="game-icon-btn muted" title="Audio (Muted by default)">
           <svg id="mute-icon-svg" class="btn-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
         </button>
-        <button id="quick-settings-btn" class="icon-btn" title="Settings">
+
+        <button id="quick-settings-btn" class="game-icon-btn" title="Settings">
           <svg class="btn-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
     </header>
 
-    <!-- App Content Screens Viewport -->
+    <!-- Main Screens Viewport -->
     <main class="main-viewport">
 
-      <!-- 1. MAIN MENU SCREEN -->
+      <!-- 1. CINEMATIC HOMEPAGE BASE CAMP -->
       <section id="main-menu-screen" class="screen active">
-        <div class="hero-editorial-layout">
-          <div class="hero-editorial-content">
-            <div class="editorial-kicker">Spiritual Successor to Cliffhanger</div>
-            <h1 class="editorial-title">PRECISION <span class="accent-word">ASCENT</span></h1>
-            <p class="editorial-deck">Race AI mountaineers up vertical granite faces. Your typing speed fuels physical leaps from hold to hold; flawless accuracy maintains momentum.</p>
-            
-            <div class="hero-actions">
-              <button id="btn-play-campaign" class="btn btn-primary btn-xl magnetic-btn">
-                <span>Climb Campaign ➔</span>
+        <!-- Living Mountain Hero Backdrop Scene -->
+        <div class="hero-cinematic-scene">
+          <div class="scene-sky-layer">
+            <div class="cloud-drift c1"></div>
+            <div class="cloud-drift c2"></div>
+            <div class="flying-eagle">🦅</div>
+          </div>
+          
+          <div class="scene-mountain-silhouette"></div>
+          
+          <div class="hero-content-overlay">
+            <div class="expedition-badge">MOUNTAIN CLIMBING ADVENTURE</div>
+            <h1 class="hero-game-title">CONQUER THE <span class="accent-title">SUMMIT</span></h1>
+            <p class="hero-game-subtitle">Race rival climbers up vertical granite cliffs. Your typing speed fuels physical leaps from hold to hold; flawless accuracy maintains momentum.</p>
+
+            <div class="hero-button-group">
+              <button id="btn-play-campaign" class="btn game-btn primary-game-btn magnetic-btn">
+                <span class="btn-glow"></span>
+                <span class="btn-text">Climb Campaign ➔</span>
               </button>
-              <button id="btn-play-freeplay" class="btn btn-secondary btn-xl magnetic-btn">
-                <span>Free Play Ascent</span>
+              <button id="btn-play-freeplay" class="btn game-btn secondary-game-btn magnetic-btn">
+                <span class="btn-text">Free Ascent</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div class="asymmetric-mode-grid">
-          <div class="mode-card featured-mode" data-mode="boulder">
-            <div class="card-tag">ARCADE</div>
-            <h3>Boulder Dodge</h3>
-            <p>Type falling rock words to shatter granite boulders before impact.</p>
-            <button class="btn btn-sm btn-outline">Play Mode ➔</button>
+        <!-- Illustrated Game Mode Cards Carousel/Grid -->
+        <div class="illustrated-mode-grid">
+          
+          <div class="game-world-card" data-mode="boulder">
+            <div class="world-card-banner boulder-banner">
+              <div class="banner-tag">ARCADE</div>
+              <div class="world-icon">☄️</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Boulder Dodge</h3>
+              <p>Type falling rock words to shatter granite boulders before impact.</p>
+              <button class="btn btn-sm card-play-btn">Play Arcade ➔</button>
+            </div>
           </div>
 
-          <div class="mode-card" data-mode="sprint">
-            <div class="card-tag">SPEED</div>
-            <h3>30s Speed Sprint</h3>
-            <p>High-octane 30-second word rush to reach maximum peak WPM.</p>
-            <button class="btn btn-sm btn-outline">Sprint ➔</button>
+          <div class="game-world-card" data-mode="sprint">
+            <div class="world-card-banner sprint-banner">
+              <div class="banner-tag">SPEED</div>
+              <div class="world-icon">⚡</div>
+            </div>
+            <div class="world-card-body">
+              <h3>30s Speed Sprint</h3>
+              <p>High-octane 30-second word rush to reach maximum peak WPM.</p>
+              <button class="btn btn-sm card-play-btn">Sprint ➔</button>
+            </div>
           </div>
 
-          <div class="mode-card" data-mode="zen">
-            <div class="card-tag">PRACTICE</div>
-            <h3>Zen Practice</h3>
-            <p>Pressure-free alpine typing with instant rhythm analytics.</p>
-            <button class="btn btn-sm btn-outline">Practice ➔</button>
+          <div class="game-world-card" data-mode="zen">
+            <div class="world-card-banner zen-banner">
+              <div class="banner-tag">PRACTICE</div>
+              <div class="world-icon">🧘</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Zen Practice</h3>
+              <p>Pressure-free alpine typing with instant rhythm diagnostics.</p>
+              <button class="btn btn-sm card-play-btn">Practice ➔</button>
+            </div>
           </div>
 
-          <div class="mode-card" data-mode="timeattack">
-            <div class="card-tag">CLOCK</div>
-            <h3>Time Attack</h3>
-            <p>Type against 60s, 120s, or 300s mountain timers for high scores.</p>
-            <button class="btn btn-sm btn-outline">Race ➔</button>
+          <div class="game-world-card" data-mode="timeattack">
+            <div class="world-card-banner clock-banner">
+              <div class="banner-tag">CLOCK</div>
+              <div class="world-icon">⏱️</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Time Attack</h3>
+              <p>Type against 60s, 120s, or 300s mountain timers for high scores.</p>
+              <button class="btn btn-sm card-play-btn">Race Clock ➔</button>
+            </div>
           </div>
 
-          <div class="mode-card" data-mode="survival">
-            <div class="card-tag">ENDLESS</div>
-            <h3>Endless Survival</h3>
-            <p>Accelerating AI speed and harsh weather. How high can you climb?</p>
-            <button class="btn btn-sm btn-outline">Survive ➔</button>
+          <div class="game-world-card" data-mode="survival">
+            <div class="world-card-banner survival-banner">
+              <div class="banner-tag">ENDLESS</div>
+              <div class="world-icon">🔥</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Endless Survival</h3>
+              <p>Accelerating AI speed and harsh weather. How high can you climb?</p>
+              <button class="btn btn-sm card-play-btn">Survive ➔</button>
+            </div>
           </div>
 
-          <div class="mode-card" data-mode="multiplayer">
-            <div class="card-tag">DUEL</div>
-            <h3>Local Pass & Play</h3>
-            <p>Side-by-side local dual climbing on the same keyboard.</p>
-            <button class="btn btn-sm btn-outline">Enter ➔</button>
+          <div class="game-world-card" data-mode="multiplayer">
+            <div class="world-card-banner duel-banner">
+              <div class="banner-tag">MULTIPLAYER</div>
+              <div class="world-icon">⚔️</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Live Arena Duel</h3>
+              <p>Matchmaking lobby, room codes, and local pass-and-play duel.</p>
+              <button class="btn btn-sm card-play-btn">Enter Arena ➔</button>
+            </div>
           </div>
+
         </div>
 
-        <div class="menu-subnav">
-          <button id="menu-btn-locker" class="subnav-item">Locker</button>
-          <button id="menu-btn-stats" class="subnav-item">Analytics</button>
-          <button id="menu-btn-achievements" class="subnav-item">Achievements</button>
-          <button id="menu-btn-settings" class="subnav-item">Settings</button>
+        <!-- Expedition Subnav Buttons -->
+        <div class="expedition-subnav">
+          <button id="menu-btn-locker" class="exp-subnav-btn">Locker & Outfits</button>
+          <button id="menu-btn-stats" class="exp-subnav-btn">Analytics</button>
+          <button id="menu-btn-achievements" class="exp-subnav-btn">Achievements</button>
+          <button id="menu-btn-settings" class="exp-subnav-btn">Settings</button>
         </div>
       </section>
 
 
-      <!-- 2. CAMPAIGN MAP SCREEN -->
+      <!-- 2. CAMPAIGN PEAKS EXPEDITION MAP -->
       <section id="campaign-screen" class="screen">
         <div class="screen-header">
-          <h2>Campaign Peaks</h2>
+          <h2>Campaign Peaks Trail</h2>
           <p>Conquer each peak to unlock higher altitudes and harder AI opponents.</p>
         </div>
 
@@ -151,7 +206,7 @@
               </div>
               <h3>Beginner Climber</h3>
               <p>Simple sentences, slow AI pace, zero special characters.</p>
-              <button class="btn btn-primary start-diff-btn" data-diff="easy">Start Climb ➔</button>
+              <button class="btn primary-game-btn start-diff-btn" data-diff="easy">Start Climb ➔</button>
             </div>
 
             <div class="diff-card" data-diff="medium">
@@ -160,8 +215,8 @@
                 <span class="diff-wpm">~45 WPM AI</span>
               </div>
               <h3>Racer Climber</h3>
-              <p>Standard punctuation, moderate AI pace, occasional rock hazards.</p>
-              <button class="btn btn-primary start-diff-btn" data-diff="medium">Start Climb ➔</button>
+              <p>Standard punctuation, moderate AI pace, rockfall hazards.</p>
+              <button class="btn primary-game-btn start-diff-btn" data-diff="medium">Start Climb ➔</button>
             </div>
 
             <div class="diff-card" data-diff="hard">
@@ -171,7 +226,7 @@
               </div>
               <h3>Alpine Pro</h3>
               <p>Complex sentences with capitals & numbers. Aggressive AI rival.</p>
-              <button class="btn btn-primary start-diff-btn" data-diff="hard">Start Climb ➔</button>
+              <button class="btn primary-game-btn start-diff-btn" data-diff="hard">Start Climb ➔</button>
             </div>
 
             <div class="diff-card" data-diff="expert">
@@ -181,7 +236,7 @@
               </div>
               <h3>Summit Master</h3>
               <p>Long passages with punctuation & symbols. Rapid climbing pace.</p>
-              <button class="btn btn-primary start-diff-btn" data-diff="expert">Start Climb ➔</button>
+              <button class="btn primary-game-btn start-diff-btn" data-diff="expert">Start Climb ➔</button>
             </div>
 
             <div class="diff-card" data-diff="impossible">
@@ -191,7 +246,7 @@
               </div>
               <h3>Titan Legend</h3>
               <p>Extreme passages, blistering AI speed. Requires 100% accuracy.</p>
-              <button class="btn btn-primary start-diff-btn" data-diff="impossible">Start Climb ➔</button>
+              <button class="btn primary-game-btn start-diff-btn" data-diff="impossible">Start Climb ➔</button>
             </div>
           </div>
         </div>
@@ -205,7 +260,7 @@
           <span class="pulse-text">TYPE ANY KEY TO START RACE</span>
         </div>
 
-        <!-- Live Editorial HUD Bar -->
+        <!-- Live Expedition HUD Bar -->
         <div class="game-hud">
           <div class="altitude-hud">
             <span class="hud-label">ALTITUDE</span>
@@ -274,11 +329,11 @@
         </div>
       </section>
 
-      <!-- 5. LOCKER / COSMETICS SCREEN -->
+      <!-- 5. LOCKER / MASCOT OUTFITS SCREEN -->
       <section id="locker-screen" class="screen">
         <div class="screen-header">
-          <h2>Climber Locker</h2>
-          <p>Equip custom climber suits, climbing ropes, trail auras, and flags.</p>
+          <h2>Climber Locker & Outfits</h2>
+          <p>Equip custom climber outfits, ropes, trail auras, and summit flags.</p>
         </div>
 
         <div class="locker-container scrollable-content">
@@ -463,7 +518,7 @@
               </div>
               <div class="setting-control">
                 <select id="select-theme" class="custom-select">
-                  <option value="theme-earthy">Earthy Mountaineer (Default)</option>
+                  <option value="theme-indie">Expedition Indie (Default)</option>
                   <option value="theme-dark">Midnight Slate</option>
                   <option value="theme-highcontrast">High Contrast (Accessibility)</option>
                 </select>
@@ -486,18 +541,27 @@
         </div>
       </section>
 
-      <!-- 9. MULTIPLAYER SCREEN -->
+      <!-- 9. MULTIPLAYER ARENA LOBBY SCREEN -->
       <section id="multiplayer-screen" class="screen">
         <div class="screen-header">
-          <h2>Multiplayer & Pass-and-Play</h2>
-          <p>Challenge friends locally or host custom duel rooms.</p>
+          <h2>Multiplayer Arena & Pass-and-Play</h2>
+          <p>Race live opponents or host custom private duel rooms.</p>
         </div>
 
         <div class="multiplayer-container scrollable-content">
+          <div class="lobby-card-box featured-lobby">
+            <div class="lobby-badge">PUBLIC MATCHMAKING</div>
+            <h3>Ranked & Casual Quick Race</h3>
+            <p>Join global matchmaking queues to race live ghost opponents in real-time.</p>
+            <div class="lobby-actions">
+              <button id="btn-start-ranked-match" class="btn primary-game-btn">Find Ranked Race ➔</button>
+            </div>
+          </div>
+
           <div class="lobby-card-box">
             <h3>Local Pass & Play Duel</h3>
             <p>Race side-by-side against a friend on the same keyboard.</p>
-            <button id="btn-start-local-duel" class="btn btn-primary btn-lg">Start Local Duel ➔</button>
+            <button id="btn-start-local-duel" class="btn secondary-game-btn">Start Local Duel ➔</button>
           </div>
         </div>
       </section>
@@ -538,9 +602,9 @@
         </div>
 
         <div class="modal-actions">
-          <button id="modal-btn-next" class="btn btn-primary btn-lg">Next Mountain ➔</button>
-          <button id="modal-btn-retry" class="btn btn-secondary btn-lg">Retry Climb 🔄</button>
-          <button id="modal-btn-menu" class="btn btn-outline btn-lg">Main Menu 🏠</button>
+          <button id="modal-btn-next" class="btn primary-game-btn btn-lg">Next Mountain ➔</button>
+          <button id="modal-btn-retry" class="btn secondary-game-btn btn-lg">Retry Climb 🔄</button>
+          <button id="modal-btn-menu" class="btn btn-outline btn-lg">Base Camp 🏠</button>
         </div>
       </div>
     </div>
@@ -551,9 +615,9 @@
         <h2>GAME PAUSED</h2>
         <p>Take a break and catch your breath!</p>
         <div class="modal-actions vertical">
-          <button id="pause-btn-resume" class="btn btn-primary btn-lg">Resume Climb ▶</button>
-          <button id="pause-btn-restart" class="btn btn-secondary">Restart Mountain 🔄</button>
-          <button id="pause-btn-quit" class="btn btn-danger">Quit to Menu 🏠</button>
+          <button id="pause-btn-resume" class="btn primary-game-btn btn-lg">Resume Climb ▶</button>
+          <button id="pause-btn-restart" class="btn secondary-game-btn">Restart Mountain 🔄</button>
+          <button id="pause-btn-quit" class="btn btn-danger">Quit to Base Camp 🏠</button>
         </div>
       </div>
     </div>

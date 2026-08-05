@@ -1,4 +1,4 @@
-// Screen Navigation, Back-Stack History, Top Logo Routing & Analytics Manager
+// UI/UX Game Presentation & Interactive Motion Manager
 
 import { MOUNTAIN_DEFINITIONS } from '../data/sentences.js';
 import { COSMETICS_DATABASE } from '../data/cosmetics.js';
@@ -12,6 +12,7 @@ export class UIManager {
 
     this.initElements();
     this.bindEvents();
+    this.bindMagneticHoverAndTilt();
   }
 
   initElements() {
@@ -21,7 +22,7 @@ export class UIManager {
   }
 
   bindEvents() {
-    // Top-Left Logo Click Handler -> Navigates directly to Home Screen!
+    // Top-Left Logo Click Handler -> Returns to Base Camp
     if (this.logoHome) {
       this.logoHome.addEventListener("click", (e) => {
         e.preventDefault();
@@ -75,7 +76,7 @@ export class UIManager {
       }
 
       // 3. Mode Cards (Boulder Dodge, Speed Sprint, Zen, Time Attack, Survival, Multiplayer)
-      const modeCard = e.target.closest(".mode-card");
+      const modeCard = e.target.closest(".game-world-card");
       if (modeCard) {
         const mode = modeCard.dataset.mode;
         this.app.sound.playButtonClick();
@@ -161,7 +162,14 @@ export class UIManager {
       const pauseQuit = e.target.closest("#pause-btn-quit");
       if (pauseQuit) { this.app.closeModal(); this.showScreen("main-menu-screen"); return; }
 
-      // 10. Local Duel Start
+      // 10. Local Duel Start & Ranked Race Start
+      const btnRanked = e.target.closest("#btn-start-ranked-match");
+      if (btnRanked) {
+        this.app.sound.playButtonClick();
+        this.app.startGame("campaign", "rocky-cliffs", "hard");
+        return;
+      }
+
       const btnDuel = e.target.closest("#btn-start-local-duel");
       if (btnDuel) {
         this.app.sound.playButtonClick();
@@ -258,6 +266,22 @@ export class UIManager {
     }
   }
 
+  // Magnetic Button Hover & Card Tilt Mechanics
+  bindMagneticHoverAndTilt() {
+    document.querySelectorAll(".magnetic-btn").forEach(btn => {
+      btn.addEventListener("mousemove", (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        btn.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+      });
+
+      btn.addEventListener("mouseleave", () => {
+        btn.style.transform = `translate(0px, 0px)`;
+      });
+    });
+  }
+
   saveAudioSettings() {
     const sfx = parseInt(document.getElementById("slider-sfx-vol").value || 0, 10);
     const music = parseInt(document.getElementById("slider-music-vol").value || 0, 10);
@@ -269,13 +293,11 @@ export class UIManager {
   }
 
   updateMuteIcon() {
-    const icon = document.getElementById("mute-icon");
+    const icon = document.getElementById("mute-icon-svg");
     const btn = document.getElementById("quick-mute-btn");
     if (this.app.sound.isMuted) {
-      if (icon) icon.textContent = "🔇";
       if (btn) btn.classList.add("muted");
     } else {
-      if (icon) icon.textContent = "🔊";
       if (btn) btn.classList.remove("muted");
     }
   }
@@ -318,7 +340,7 @@ export class UIManager {
     const m = MOUNTAIN_DEFINITIONS.find(item => item.id === mountainId);
     const subtitle = document.getElementById("difficulty-mountain-subtitle");
     if (subtitle && m) {
-      subtitle.textContent = `${m.name} - ${m.subtitle}`;
+      subtitle.textContent = `${m.name} — ${m.subtitle}`;
     }
     this.showScreen("difficulty-screen");
   }
@@ -355,9 +377,9 @@ export class UIManager {
               <span>AI Speed: <strong>~${m.aiSpeedWpm} WPM</strong></span>
             </div>
             ${isUnlocked ? `
-              <button class="btn btn-primary climb-peak-btn" data-mountain-id="${m.id}">Climb Peak ➔</button>
+              <button class="btn primary-game-btn climb-peak-btn" data-mountain-id="${m.id}">Climb Peak ➔</button>
             ` : `
-              <button class="btn btn-secondary disabled" disabled>🔒 Locked</button>
+              <button class="btn secondary-game-btn disabled" disabled>🔒 Locked</button>
             `}
           </div>
         </div>
@@ -388,9 +410,9 @@ export class UIManager {
           ${isEquipped ? `
             <span class="btn btn-sm btn-outline">Equipped</span>
           ` : isUnlocked ? `
-            <button class="btn btn-sm btn-primary equip-btn" data-category="${category}" data-id="${item.id}">Equip</button>
+            <button class="btn btn-sm primary-game-btn equip-btn" data-category="${category}" data-id="${item.id}">Equip</button>
           ` : `
-            <button class="btn btn-sm btn-secondary buy-btn" data-category="${category}" data-id="${item.id}" data-price="${item.price}">
+            <button class="btn btn-sm secondary-game-btn buy-btn" data-category="${category}" data-id="${item.id}" data-price="${item.price}">
               Buy 🪙 ${item.price}
             </button>
           `}
@@ -424,7 +446,6 @@ export class UIManager {
     });
   }
 
-  // Render Stats & Analytics Dashboard
   renderStats() {
     const s = this.app.storage.data.stats;
     const history = this.app.storage.data.matchHistory || [];
@@ -442,7 +463,6 @@ export class UIManager {
     set("stat-total-distance", `${s.totalDistance}m`);
     set("stat-best-combo", `${s.bestCombo}x`);
 
-    // 1. Render WPM Bar Chart
     const wpmContainer = document.getElementById("wpm-chart-bars");
     if (wpmContainer) {
       if (history.length === 0) {
@@ -461,7 +481,6 @@ export class UIManager {
       }
     }
 
-    // 2. Render Weakest Key Diagnostics
     const weakHeatmap = document.getElementById("weak-keys-heatmap");
     if (weakHeatmap) {
       const sortedKeys = Object.entries(mistakes).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -474,7 +493,6 @@ export class UIManager {
       }
     }
 
-    // 3. Render Match History Table
     const tbody = document.getElementById("match-history-tbody");
     if (tbody) {
       if (history.length === 0) {
