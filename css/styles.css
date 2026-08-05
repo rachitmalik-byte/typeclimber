@@ -1,9 +1,11 @@
 /* ==========================================================================
    TYPECLIMBER — COMMERCIAL INDIE GAME PRESENTATION LAYER
-   Non-Blocking Typing Highlight & Rich Mountain Environmental Art Style
+   Aesthetic: Premium Expedition Game (Alto's Adventure / Monument Valley / Supercell)
+   Palette: Ice Blue (#38bdf8), Alpine Pine (#065f46), Deep Navy (#0f172a), Chalk White (#f8fafc), Warm Amber (#d97706)
    ========================================================================== */
 
 :root {
+  /* Color Tokens */
   --bg-primary: #0b1120;
   --bg-secondary: #1e293b;
   --bg-card: rgba(30, 41, 59, 0.85);
@@ -64,7 +66,7 @@ html, body {
   background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 100%);
 }
 
-/* Atmospheric Ambient Layer Overlay */
+/* Atmospheric Ambient Fog Overlay */
 .ambient-fog-layer {
   position: absolute;
   inset: 0;
@@ -90,6 +92,21 @@ html, body {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.mascot-header-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 2px solid var(--accent-ice);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.mascot-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .nav-back-btn {
@@ -251,7 +268,7 @@ html, body {
 .scrollable-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
 .scrollable-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
 
-/* 1. CINEMATIC HOMEPAGE BASE CAMP */
+/* 1. CINEMATIC HOMEPAGE BASE CAMP WITH ILLUSTRATED BACKDROP */
 #main-menu-screen {
   justify-content: space-between;
   overflow-y: auto;
@@ -259,7 +276,9 @@ html, body {
 
 .hero-cinematic-scene {
   position: relative;
-  background: linear-gradient(180deg, #1e293b 0%, #0b1120 100%);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(11, 17, 32, 0.95) 100%), url('../assets/images/mountain_bg.jpg');
+  background-size: cover;
+  background-position: center;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 48px;
@@ -291,16 +310,6 @@ html, body {
 @keyframes eagleFly {
   0%, 100% { transform: translateY(0) scaleX(1); }
   50% { transform: translateY(-20px) scaleX(-1); }
-}
-
-.scene-mountain-silhouette {
-  position: absolute;
-  bottom: -40px;
-  right: -20px;
-  width: 480px;
-  height: 280px;
-  background: radial-gradient(circle at 50% 50%, rgba(6, 95, 70, 0.4) 0%, transparent 80%);
-  pointer-events: none;
 }
 
 .hero-content-overlay {
@@ -433,13 +442,15 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  background-size: cover;
+  background-position: center;
 }
 
-.boulder-banner { background: linear-gradient(135deg, #1e293b 0%, #450a0a 100%); }
+.boulder-banner { background-image: linear-gradient(180deg, rgba(30,41,59,0.5), rgba(69,10,10,0.85)), url('../assets/images/volcano_peak.jpg'); }
 .sprint-banner { background: linear-gradient(135deg, #1e293b 0%, #1e1b4b 100%); }
-.zen-banner { background: linear-gradient(135deg, #1e293b 0%, #065f46 100%); }
+.zen-banner { background-image: linear-gradient(180deg, rgba(30,41,59,0.5), rgba(6,95,70,0.85)), url('../assets/images/mountain_bg.jpg'); }
 .clock-banner { background: linear-gradient(135deg, #1e293b 0%, #451a03 100%); }
-.survival-banner { background: linear-gradient(135deg, #1e293b 0%, #312e81 100%); }
+.survival-banner { background-image: linear-gradient(180deg, rgba(30,41,59,0.5), rgba(49,46,129,0.85)), url('../assets/images/snow_summit.jpg'); }
 .duel-banner { background: linear-gradient(135deg, #1e293b 0%, #0284c7 100%); }
 
 .banner-tag {
@@ -745,31 +756,10 @@ html, body {
   min-height: 2.4em;
 }
 
-/* NON-BLOCKING CHARACTER TYPING HIGHLIGHTS */
-.char-correct {
-  color: #10b981; /* Green for correct character */
-  font-weight: 600;
-}
-
-.char-wrong {
-  color: #ffffff;
-  background: #ef4444; /* Red background for mistyped character */
-  border-radius: 2px;
-  font-weight: 700;
-  padding: 0 1px;
-}
-
-.char-current {
-  border-left: 3px solid var(--accent-ice);
-  background: rgba(56, 189, 248, 0.2);
-  border-radius: 2px;
-  animation: cursorBlink 1s infinite;
-}
-
-.char-untyped {
-  color: var(--text-secondary);
-  opacity: 0.65;
-}
+.char-correct { color: #10b981; font-weight: 600; }
+.char-wrong { color: #ffffff; background: #ef4444; border-radius: 2px; font-weight: 700; padding: 0 1px; }
+.char-current { border-left: 3px solid var(--accent-ice); background: rgba(56, 189, 248, 0.2); border-radius: 2px; animation: cursorBlink 1s infinite; }
+.char-untyped { color: var(--text-secondary); opacity: 0.65; }
 
 @keyframes cursorBlink {
   0%, 100% { border-left-color: var(--accent-ice); }
