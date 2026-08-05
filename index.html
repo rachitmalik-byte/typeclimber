@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeClimber - Modern Typing Mountain Racer & Arcade</title>
+  <meta name="description" content="Race against AI climbers up dangerous mountain peaks by typing complex sentences with speed and accuracy. Modern spiritual successor to Cliffhanger.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;600;700;800;900&family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="theme-dark">
+  <div id="app" class="app-container">
+    <!-- Top Global Header / Status Bar -->
+    <header class="global-header">
+      <div class="header-left">
+        <button id="global-back-btn" class="nav-back-btn hidden" aria-label="Go Back">
+          <span class="back-icon">←</span> Back
+        </button>
+        <!-- Logo click navigates directly to Home -->
+        <div id="global-logo-home" class="logo-group" title="Click to go to Home Screen" style="cursor: pointer;">
+          <span class="logo-icon">🏔️</span>
+          <span class="logo-text">TYPE<span class="highlight">CLIMBER</span></span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="user-stats-pill">
+          <div class="stat-badge coin-badge">
+            <span class="icon">🪙</span>
+            <span id="player-coins-display">0</span>
+          </div>
+          <div class="stat-badge xp-badge">
+            <span class="icon">⭐</span>
+            <span id="player-level-display">Lvl 1</span>
+          </div>
+        </div>
+        <button id="quick-mute-btn" class="icon-btn muted" title="Audio (Muted by default)">
+          <span id="mute-icon">🔇</span>
+        </button>
+        <button id="quick-settings-btn" class="icon-btn" title="Settings">
+          <span>⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Content Screens Viewport -->
+    <main class="main-viewport">
+
+      <!-- 1. MAIN MENU SCREEN -->
+      <section id="main-menu-screen" class="screen active">
+        <div class="hero-section">
+          <div class="hero-content">
+            <div class="hero-badge">Modern Spiritual Successor to Cliffhanger</div>
+            <h1 class="hero-title">CONQUER THE <span class="gradient-text">SUMMIT</span> WITH SPEED</h1>
+            <p class="hero-subtitle">Race against ruthless AI climbers up treacherous mountain peaks. Accuracy fuels your momentum, speed crowns you champion.</p>
+            <div class="hero-actions">
+              <button id="btn-play-campaign" class="btn btn-primary btn-xl shadow-glow">
+                <span class="btn-icon">🏔️</span> Campaign Mode
+              </button>
+              <button id="btn-play-freeplay" class="btn btn-secondary btn-xl">
+                <span class="btn-icon">⚡</span> Free Play (Infinite)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-grid">
+          <div class="mode-card" data-mode="boulder">
+            <div class="card-icon">☄️</div>
+            <div class="card-body">
+              <h3>Boulder Dodge (Arcade)</h3>
+              <p>Type falling rock words to smash boulders before they crush your climber!</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Smash Rocks ➔</button>
+          </div>
+
+          <div class="mode-card" data-mode="sprint">
+            <div class="card-icon">⚡</div>
+            <div class="card-body">
+              <h3>30s Speed Sprint</h3>
+              <p>High-octane 30-second word rush to reach maximum peak WPM.</p>
+            </div>
+            <button class="btn btn-sm btn-outline">Sprint ➔</button>
+          </div>
+
+          <div class="mode-card" data-mode="zen">
+            <div class="card-icon">🧘</div>
+            <div class="card-body">
+              <h3>Zen Practice</h3>
+              <p>Relaxing pressure-free typing with instant analytics diagnostics.</p>
+            </div>
+            <button class="btn btn-sm btn-outline">Practice ➔</button>
+          </div>
+
+          <div class="mode-card" data-mode="timeattack">
+            <div class="card-icon">⏱️</div>
+            <div class="card-body">
+              <h3>Time Attack</h3>
+              <p>Type against the clock (60s, 120s, 300s) for maximum altitude & score.</p>
+            </div>
+            <button class="btn btn-sm btn-outline">Play ➔</button>
+          </div>
+
+          <div class="mode-card" data-mode="survival">
+            <div class="card-icon">🔥</div>
+            <div class="card-body">
+              <h3>Endless Survival</h3>
+              <p>The AI accelerates every minute. Weather worsens. How long can you survive?</p>
+            </div>
+            <button class="btn btn-sm btn-outline">Play ➔</button>
+          </div>
+
+          <div class="mode-card" data-mode="multiplayer">
+            <div class="card-icon">⚔️</div>
+            <div class="card-body">
+              <h3>Multiplayer Room</h3>
+              <p>Pass & Play local duel or setup custom match settings.</p>
+            </div>
+            <button class="btn btn-sm btn-outline">Enter ➔</button>
+          </div>
+        </div>
+
+        <div class="menu-subnav">
+          <button id="menu-btn-locker" class="subnav-item"><span class="icon">👕</span> Locker</button>
+          <button id="menu-btn-stats" class="subnav-item"><span class="icon">📊</span> Statistics & Analytics</button>
+          <button id="menu-btn-achievements" class="subnav-item"><span class="icon">🏆</span> Achievements</button>
+          <button id="menu-btn-settings" class="subnav-item"><span class="icon">⚙️</span> Settings</button>
+        </div>
+      </section>
+
+
+      <!-- 2. CAMPAIGN MAP SCREEN -->
+      <section id="campaign-screen" class="screen">
+        <div class="screen-header">
+          <h2>Campaign Peaks</h2>
+          <p>Conquer each peak to unlock higher altitudes and harder AI opponents.</p>
+        </div>
+
+        <div class="campaign-container scrollable-content">
+          <div class="mountains-list" id="mountains-list-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+
+      <!-- 3. DIFFICULTY SELECT MODAL / SCREEN -->
+      <section id="difficulty-screen" class="screen">
+        <div class="screen-header">
+          <h2>Select Difficulty</h2>
+          <p id="difficulty-mountain-subtitle">Green Hills - Moderate Climb</p>
+        </div>
+
+        <div class="difficulty-container scrollable-content">
+          <div class="difficulty-cards-grid" id="difficulty-grid">
+            <div class="diff-card" data-diff="easy">
+              <div class="diff-header">
+                <span class="diff-badge easy">EASY</span>
+                <span class="diff-wpm">~25 WPM AI</span>
+              </div>
+              <h3>Beginner Climber</h3>
+              <p>Simple sentences, slow AI speed, zero special characters. Perfect for warm up.</p>
+              <button class="btn btn-primary start-diff-btn" data-diff="easy">Start Climb ➔</button>
+            </div>
+
+            <div class="diff-card" data-diff="medium">
+              <div class="diff-header">
+                <span class="diff-badge medium">MEDIUM</span>
+                <span class="diff-wpm">~45 WPM AI</span>
+              </div>
+              <h3>Racer Climber</h3>
+              <p>Standard punctuation, moderate AI pace, occasional falling rocks.</p>
+              <button class="btn btn-primary start-diff-btn" data-diff="medium">Start Climb ➔</button>
+            </div>
+
+            <div class="diff-card" data-diff="hard">
+              <div class="diff-header">
+                <span class="diff-badge hard">HARD</span>
+                <span class="diff-wpm">~70 WPM AI</span>
+              </div>
+              <h3>Alpine Pro</h3>
+              <p>Complex sentences with capitals & numbers. Aggressive AI that rarely errs.</p>
+              <button class="btn btn-primary start-diff-btn" data-diff="hard">Start Climb ➔</button>
+            </div>
+
+            <div class="diff-card" data-diff="expert">
+              <div class="diff-header">
+                <span class="diff-badge expert">EXPERT</span>
+                <span class="diff-wpm">~95 WPM AI</span>
+              </div>
+              <h3>Summit Master</h3>
+              <p>Long passages with punctuation & symbols. Rapid AI climbing momentum.</p>
+              <button class="btn btn-primary start-diff-btn" data-diff="expert">Start Climb ➔</button>
+            </div>
+
+            <div class="diff-card" data-diff="impossible">
+              <div class="diff-header">
+                <span class="diff-badge impossible">IMPOSSIBLE</span>
+                <span class="diff-wpm">~120 WPM AI</span>
+              </div>
+              <h3>Titan Legend</h3>
+              <p>Extreme passages, blistering AI speed. Requires flawless accuracy to survive.</p>
+              <button class="btn btn-primary start-diff-btn" data-diff="impossible">Start Climb ➔</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- 4. ACTIVE GAMEPLAY SCREEN -->
+      <section id="game-screen" class="screen">
+        <!-- Ready Keystroke Start Banner (Starts ONLY when user types first key) -->
+        <div id="ready-start-banner" class="ready-banner">
+          <span class="pulse-icon">⌨️</span> TYPE ANY KEY TO START RACE!
+        </div>
+
+        <!-- Live HUD Bar -->
+        <div class="game-hud">
+          <div class="hud-item altitude-hud">
+            <span class="label">PLAYER ALTITUDE</span>
+            <div class="value-row">
+              <span id="hud-player-alt" class="value player-val">0m</span>
+              <span class="vs-text">VS</span>
+              <span id="hud-ai-alt" class="value ai-val">0m</span>
+            </div>
+            <div class="progress-bar-container">
+              <div id="player-progress-bar" class="progress-fill player-fill" style="width: 0%"></div>
+              <div id="ai-progress-bar" class="progress-fill ai-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="hud-stats-group">
+            <div class="hud-stat">
+              <span class="stat-label">WPM</span>
+              <span id="hud-wpm" class="stat-val highlight">0</span>
+            </div>
+            <div class="hud-stat">
+              <span class="stat-label">ACCURACY</span>
+              <span id="hud-accuracy" class="stat-val">100%</span>
+            </div>
+            <div class="hud-stat">
+              <span class="stat-label">COMBO</span>
+              <span id="hud-combo" class="stat-val combo-glow">0x</span>
+            </div>
+            <div class="hud-stat" id="hud-timer-container">
+              <span class="stat-label">TIME</span>
+              <span id="hud-timer" class="stat-val">00:00</span>
+            </div>
+          </div>
+
+          <button id="game-pause-btn" class="btn btn-sm btn-outline">Pause ⏸</button>
+        </div>
+
+        <!-- Split Game View -->
+        <div class="game-viewport-split">
+          <!-- Canvas Renderer Container -->
+          <div class="mountain-canvas-wrapper">
+            <canvas id="mountain-canvas"></canvas>
+            <div id="weather-effect-overlay" class="weather-overlay"></div>
+
+            <!-- Mountain Title Overlay -->
+            <div class="canvas-mountain-badge">
+              <span id="active-mountain-name">Green Hills</span>
+              <span id="active-mountain-diff" class="diff-tag">Medium</span>
+            </div>
+          </div>
+
+          <!-- Typing Arena Container -->
+          <div class="typing-arena">
+            <!-- Hidden Focus Input for Keyboard Capture -->
+            <input type="text" id="typing-hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="hidden-input">
+            
+            <div class="typing-box" id="typing-box-container">
+              <!-- Active Sentence Displayed with Span Characters millisecond 0 -->
+              <div id="typing-prompt-display" class="typing-prompt"></div>
+              <div class="upcoming-preview-row">
+                <span class="upcoming-label">NEXT:</span>
+                <span id="upcoming-prompt-text" class="upcoming-text">...</span>
+              </div>
+            </div>
+            
+            <div class="typing-feedback-line">
+              <span id="typing-status-hint" class="hint-text">Type the exact characters above to climb!</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. LOCKER / COSMETICS SCREEN -->
+      <section id="locker-screen" class="screen">
+        <div class="screen-header">
+          <h2>Climber Locker</h2>
+          <p>Customize your climber's avatar, rope color, backpack, trail aura, and flag!</p>
+        </div>
+
+        <div class="locker-container scrollable-content">
+          <div class="locker-tabs">
+            <button class="locker-tab-btn active" data-category="skins">Skins</button>
+            <button class="locker-tab-btn" data-category="ropes">Ropes</button>
+            <button class="locker-tab-btn" data-category="auras">Trail Auras</button>
+            <button class="locker-tab-btn" data-category="flags">Victory Flags</button>
+          </div>
+
+          <div class="cosmetics-grid" id="cosmetics-items-grid"></div>
+        </div>
+      </section>
+
+      <!-- 6. STATISTICS & ANALYTICS DASHBOARD SCREEN -->
+      <section id="stats-screen" class="screen">
+        <div class="screen-header">
+          <h2>Statistics & Performance Analytics</h2>
+          <p>Comprehensive diagnostic breakdown, WPM trends, accuracy distribution, and weak key detection.</p>
+        </div>
+
+        <div class="stats-container scrollable-content">
+          <!-- Overview Metric Cards -->
+          <div class="stats-cards-grid">
+            <div class="stat-card">
+              <div class="stat-icon">🎮</div>
+              <div class="stat-number" id="stat-total-games">0</div>
+              <div class="stat-title">Games Played</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🏆</div>
+              <div class="stat-number" id="stat-wins">0</div>
+              <div class="stat-title">Victories</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">⚡</div>
+              <div class="stat-number" id="stat-highest-wpm">0</div>
+              <div class="stat-title">Highest WPM</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🎯</div>
+              <div class="stat-number" id="stat-best-accuracy">0%</div>
+              <div class="stat-title">Best Accuracy</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🏔️</div>
+              <div class="stat-number" id="stat-total-distance">0m</div>
+              <div class="stat-title">Total Distance</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🔥</div>
+              <div class="stat-number" id="stat-best-combo">0x</div>
+              <div class="stat-title">Longest Combo</div>
+            </div>
+          </div>
+
+          <!-- Working Analytics Dashboard Box -->
+          <div class="analytics-dashboard-box">
+            <h3><span class="icon">📈</span> Live Performance Analytics</h3>
+            <div class="analytics-grid">
+              <!-- WPM Trend Visualization -->
+              <div class="analytics-card">
+                <h4>Recent WPM Progression</h4>
+                <div id="wpm-chart-bars" class="wpm-bars-container"></div>
+              </div>
+
+              <!-- Accuracy Breakdown -->
+              <div class="analytics-card">
+                <h4>Accuracy Distribution</h4>
+                <div class="accuracy-meter-box">
+                  <div id="acc-bar-perfect" class="acc-bar-fill perfect" style="width: 70%">70% Perfect</div>
+                  <div id="acc-bar-minor" class="acc-bar-fill minor" style="width: 20%">20% Minor</div>
+                  <div id="acc-bar-error" class="acc-bar-fill error" style="width: 10%">10% Typos</div>
+                </div>
+              </div>
+
+              <!-- Weak Keys Diagnostic Heatmap -->
+              <div class="analytics-card full-width">
+                <h4>Weakest Keys Diagnostic (Highest Typos)</h4>
+                <div id="weak-keys-heatmap" class="weak-keys-list">
+                  <span class="weak-tag">No typos detected yet! Keep typing to generate diagnostic data.</span>
+                </div>
+              </div>
+
+              <!-- Match History Table -->
+              <div class="analytics-card full-width">
+                <h4>Recent Match History</h4>
+                <div class="table-responsive">
+                  <table class="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>Mode</th>
+                        <th>Peak</th>
+                        <th>WPM</th>
+                        <th>Accuracy</th>
+                        <th>Combo</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody id="match-history-tbody">
+                      <tr><td colspan="6" class="text-center">No match history recorded yet. Play a game to view analytics!</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. ACHIEVEMENTS & DAILY CHALLENGES SCREEN -->
+      <section id="achievements-screen" class="screen">
+        <div class="screen-header">
+          <h2>Achievements & Missions</h2>
+          <p>Complete challenges to earn XP and Climb Coins!</p>
+        </div>
+
+        <div class="achievements-container scrollable-content">
+          <div class="achievements-tabs">
+            <button id="tab-btn-achievements" class="achieve-tab-btn active">Achievements</button>
+            <button id="tab-btn-dailies" class="achieve-tab-btn">Daily Missions</button>
+          </div>
+
+          <div id="achievements-list-grid" class="achievements-grid"></div>
+          <div id="dailies-list-grid" class="achievements-grid hidden"></div>
+        </div>
+      </section>
+
+      <!-- 8. SETTINGS & ACCESSIBILITY SCREEN -->
+      <section id="settings-screen" class="screen">
+        <div class="screen-header">
+          <h2>Settings & Audio</h2>
+          <p>Customize your typing environment, sound synthesizer, and visual preferences.</p>
+        </div>
+
+        <div class="settings-container scrollable-content">
+          <div class="settings-group">
+            <h3>Audio Synthesizer (Default Muted)</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="slider-sfx-vol">Keyboard SFX Volume</label>
+                <span class="subtext">Mechanical switch click loudness</span>
+              </div>
+              <div class="setting-control">
+                <input type="range" id="slider-sfx-vol" min="0" max="100" value="0">
+                <span id="val-sfx-vol" class="vol-val">0%</span>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="slider-music-vol">Music Volume</label>
+                <span class="subtext">Procedural ambient soundtrack</span>
+              </div>
+              <div class="setting-control">
+                <input type="range" id="slider-music-vol" min="0" max="100" value="0">
+                <span id="val-music-vol" class="vol-val">0%</span>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="slider-ambience-vol">Mountain Ambience Volume</label>
+                <span class="subtext">Wind, snow, and lava atmospheric rumble</span>
+              </div>
+              <div class="setting-control">
+                <input type="range" id="slider-ambience-vol" min="0" max="100" value="0">
+                <span id="val-ambience-vol" class="vol-val">0%</span>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="select-switch-sound">Mechanical Switch Sound Profile</label>
+                <span class="subtext">Synthesized switch feel</span>
+              </div>
+              <div class="setting-control">
+                <select id="select-switch-sound" class="custom-select">
+                  <option value="blue">Cherry MX Blue (Clicky)</option>
+                  <option value="brown">Cherry MX Brown (Tactile)</option>
+                  <option value="red">Cherry MX Red (Linear)</option>
+                  <option value="topre">Topre Capacitive (Thock)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3>Visuals & Theme</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="select-theme">Color Theme</label>
+                <span class="subtext">UI visual theme</span>
+              </div>
+              <div class="setting-control">
+                <select id="select-theme" class="custom-select">
+                  <option value="theme-dark">Midnight Dark (Default)</option>
+                  <option value="theme-cyber">Cyber Neon</option>
+                  <option value="theme-volcano">Volcanic Ember</option>
+                  <option value="theme-highcontrast">High Contrast (Accessibility)</option>
+                  <option value="theme-light">Alpine Light</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="toggle-particles">Weather Particles</label>
+                <span class="subtext">Snow, ash, and wind dust animations</span>
+              </div>
+              <div class="setting-control">
+                <input type="checkbox" id="toggle-particles" class="toggle-checkbox" checked>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="toggle-screenshake">Screen Shake Effects</label>
+                <span class="subtext">Mistake error shake feedback</span>
+              </div>
+              <div class="setting-control">
+                <input type="checkbox" id="toggle-screenshake" class="toggle-checkbox" checked>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3>Data Management</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <label>Reset Progress</label>
+                <span class="subtext">Clear saved stats, unlocked cosmetics, and records</span>
+              </div>
+              <div class="setting-control">
+                <button id="btn-reset-data" class="btn btn-sm btn-danger">Reset All Data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. MULTIPLAYER ROOM LOBBY SCREEN -->
+      <section id="multiplayer-screen" class="screen">
+        <div class="screen-header">
+          <h2>Multiplayer & Pass-and-Play</h2>
+          <p>Challenge friends locally or host custom duel rooms.</p>
+        </div>
+
+        <div class="multiplayer-container scrollable-content">
+          <div class="lobby-card-box">
+            <h3>Local Pass & Play Duel</h3>
+            <p>Race side-by-side against a friend on the same keyboard or turn-based score attack.</p>
+            <button id="btn-start-local-duel" class="btn btn-primary btn-lg">Start Local Duel ➔</button>
+          </div>
+
+          <div class="lobby-card-box disabled-box">
+            <div class="badge-online">WebSocket Ready</div>
+            <h3>Online Matchmaking (Future Expansion)</h3>
+            <p>Architecture supports real-time lobby connections, room codes, and ranked matches.</p>
+            <button class="btn btn-secondary disabled" disabled>Search Online Room (Coming Soon)</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- GAME OVER / VICTORY MODAL OVERLAY -->
+    <div id="game-over-modal" class="modal-backdrop hidden">
+      <div class="modal-content glass-box glow-card">
+        <div class="modal-header">
+          <span id="modal-result-icon" class="result-icon">🏆</span>
+          <h2 id="modal-result-title" class="result-title">SUMMIT CONQUERED!</h2>
+          <p id="modal-result-sub" class="result-sub">You beat the AI to the top!</p>
+        </div>
+
+        <div class="modal-stats-grid">
+          <div class="modal-stat-box">
+            <span class="m-label">FINAL WPM</span>
+            <span id="m-wpm" class="m-val highlight">84</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="m-label">ACCURACY</span>
+            <span id="m-acc" class="m-val">98%</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="m-label">MAX COMBO</span>
+            <span id="m-combo" class="m-val">34x</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="m-label">TIME</span>
+            <span id="m-time" class="m-val">01:42</span>
+          </div>
+        </div>
+
+        <div class="modal-rewards-row">
+          <div class="reward-pill"><span class="icon">🪙</span> +<span id="m-coins">150</span> Coins</div>
+          <div class="reward-pill"><span class="icon">⭐</span> +<span id="m-xp">250</span> XP</div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="modal-btn-next" class="btn btn-primary btn-lg">Next Mountain ➔</button>
+          <button id="modal-btn-retry" class="btn btn-secondary btn-lg">Retry Climb 🔄</button>
+          <button id="modal-btn-menu" class="btn btn-outline btn-lg">Main Menu 🏠</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE MODAL OVERLAY -->
+    <div id="pause-modal" class="modal-backdrop hidden">
+      <div class="modal-content glass-box">
+        <h2>GAME PAUSED</h2>
+        <p>Take a break and catch your breath!</p>
+        <div class="modal-actions vertical">
+          <button id="pause-btn-resume" class="btn btn-primary btn-lg">Resume Climb ▶</button>
+          <button id="pause-btn-restart" class="btn btn-secondary">Restart Mountain 🔄</button>
+          <button id="pause-btn-quit" class="btn btn-danger">Quit to Menu 🏠</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST OVERLAY -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
