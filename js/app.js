@@ -228,6 +228,7 @@ class TypeClimberApp {
       flagIcon: flagObj ? flagObj.icon : "🚩"
     };
 
+    // Explicitly pass mode to renderer.init!
     if (this.renderer) {
       this.renderer.init(m, cosmetics, mode);
     }

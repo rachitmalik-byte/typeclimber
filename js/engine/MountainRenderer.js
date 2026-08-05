@@ -1,4 +1,4 @@
-// Realistic 2D Animated Climber & Interactive Arcade Rendering Engine
+// 100% Cross-Browser Safe 2D Animated Character & Multi-Game Renderer
 
 export class MountainRenderer {
   constructor(canvasElement) {
@@ -28,16 +28,6 @@ export class MountainRenderer {
     this.climbCycle = 0;
     this.idleBreathe = 0;
 
-    // Load High-Res Sprite Assets
-    this.climberSpriteImg = new Image();
-    this.climberSpriteImg.src = "assets/images/climber_sprite.jpg";
-
-    this.nitroCarImg = new Image();
-    this.nitroCarImg.src = "assets/images/nitro_car.jpg";
-
-    this.spaceShipImg = new Image();
-    this.spaceShipImg.src = "assets/images/space_ship.jpg";
-
     this.playerCosmetics = {
       skin: "🧗‍♂️",
       ropeColor: "#38bdf8",
@@ -52,7 +42,7 @@ export class MountainRenderer {
   init(mountainMeta, cosmetics = {}, mode = "climb") {
     this.mountainMeta = mountainMeta;
     this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
-    this.renderMode = mode;
+    this.renderMode = mode || "climb";
 
     this.playerVisualProgress = 0;
     this.aiVisualProgress = 0;
@@ -60,8 +50,8 @@ export class MountainRenderer {
     this.aiTargetProgress = 0;
 
     this.resize();
-    if (mode === "climb") this.generateClimbingHolds();
-    if (mode === "ztype") this.initZTypeAsteroids();
+    this.generateClimbingHolds();
+    if (this.renderMode === "ztype") this.initZTypeAsteroids();
     this.initWeatherParticles();
     this.startLoop();
   }
@@ -77,28 +67,28 @@ export class MountainRenderer {
     this.playerHolds = [];
     this.aiHolds = [];
 
-    const holdCount = 32;
-    const h = this.canvas.height;
-    const startY = h - 60;
-    const summitY = 70;
+    const holdCount = 30;
+    const h = this.canvas.height || 400;
+    const startY = h - 50;
+    const summitY = 60;
     const distY = startY - summitY;
 
-    const wallMargin = this.canvas.width * 0.25;
+    const wallMargin = (this.canvas.width || 800) * 0.25;
     const playerX = wallMargin;
-    const aiX = this.canvas.width - wallMargin;
+    const aiX = (this.canvas.width || 800) - wallMargin;
 
     for (let i = 0; i <= holdCount; i++) {
       const ratio = i / holdCount;
       const baseHoldY = startY - (ratio * distY);
 
-      const pOffsetX = (Math.sin(i * 1.5) * 18);
-      const aiOffsetX = (Math.cos(i * 1.5) * 18);
+      const pOffsetX = (Math.sin(i * 1.5) * 16);
+      const aiOffsetX = (Math.cos(i * 1.5) * 16);
 
       this.playerHolds.push({
         x: playerX + pOffsetX,
         y: baseHoldY,
         type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
-        size: 16 + (i % 4) * 4,
+        size: 20 + (i % 4) * 4,
         ratio
       });
 
@@ -106,7 +96,7 @@ export class MountainRenderer {
         x: aiX + aiOffsetX,
         y: baseHoldY,
         type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
-        size: 16 + (i % 4) * 4,
+        size: 20 + (i % 4) * 4,
         ratio
       });
     }
@@ -114,15 +104,15 @@ export class MountainRenderer {
 
   initZTypeAsteroids() {
     this.asteroids = [];
-    const words = ["SPECTRUM", "APEX", "NITRO", "CYBER", "VELOCITY", "TITAN", "AURORA"];
-    const w = this.canvas.width;
+    const words = ["NITRO", "CYBER", "APEX", "VELOCITY", "TITAN", "SPECTRUM", "PULSE", "ORBIT"];
+    const w = this.canvas.width || 800;
     for (let i = 0; i < words.length; i++) {
       this.asteroids.push({
         x: Math.random() * (w - 240) + 120,
-        y: -100 - (i * 130),
+        y: -80 - (i * 120),
         word: words[i],
-        speedY: 0.9 + Math.random() * 0.4,
-        radius: 32
+        speedY: 1.0 + Math.random() * 0.5,
+        radius: 34
       });
     }
   }
@@ -131,12 +121,11 @@ export class MountainRenderer {
     this.playerTargetProgress = playerRatio;
     this.aiTargetProgress = aiRatio;
 
-    // Trigger Z-Type Laser Cannon Shot on Keystroke Update
     if (this.renderMode === "ztype" && this.asteroids.length > 0) {
       const target = this.asteroids[0];
       this.lasers.push({
         x1: this.canvas.width * 0.5,
-        y1: this.canvas.height - 90,
+        y1: this.canvas.height - 80,
         x2: target.x,
         y2: target.y,
         alpha: 1.0
@@ -150,13 +139,13 @@ export class MountainRenderer {
   }
 
   emitChalkDust(x, y) {
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 14; i++) {
       this.chalkDustParticles.push({
         x,
         y,
         vx: (Math.random() - 0.5) * 4,
         vy: (Math.random() - 0.5) * 4 - 1.5,
-        radius: Math.random() * 5 + 2,
+        radius: Math.random() * 4 + 2,
         alpha: 0.9
       });
     }
@@ -164,11 +153,11 @@ export class MountainRenderer {
 
   initWeatherParticles() {
     this.particles = [];
-    const count = 70;
+    const count = 50;
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: Math.random() * this.canvas.width,
-        y: Math.random() * this.canvas.height,
+        x: Math.random() * (this.canvas.width || 800),
+        y: Math.random() * (this.canvas.height || 400),
         size: Math.random() * 3 + 1,
         speedX: Math.random() * 1.5 - 0.75,
         speedY: Math.random() * 1.5 + 0.5,
@@ -218,7 +207,6 @@ export class MountainRenderer {
       if (p.alpha <= 0) this.chalkDustParticles.splice(idx, 1);
     });
 
-    // Update Z-Type Laser Beams
     this.lasers.forEach((l, idx) => {
       l.alpha -= 0.1;
       if (l.alpha <= 0) this.lasers.splice(idx, 1);
@@ -227,7 +215,7 @@ export class MountainRenderer {
     if (this.renderMode === "ztype") {
       this.asteroids.forEach(a => {
         a.y += a.speedY;
-        if (a.y > this.canvas.height) a.y = -100;
+        if (a.y > this.canvas.height) a.y = -80;
       });
     }
   }
@@ -261,16 +249,16 @@ export class MountainRenderer {
     } else if (this.renderMode === "ztype") {
       this.drawZTypeSpaceShooter(w, h);
     } else {
-      // Default Realistic 2D Mountain Climb
-      this.drawRealisticSky(w, h);
-      this.drawDistantMountainRidges(w, h);
-      this.drawGraniteRockFace(w, h);
+      // Default Mountain Climb Mode
+      this.drawSkyLayer(w, h);
+      this.drawDistantMountains(w, h);
+      this.drawRockWallLayer(w, h);
       this.drawClimbingHolds();
       this.drawRopesAndSummit(w, h);
 
-      // Render Realistic 2D Animated Character Climber
-      this.drawRealisticClimber(true);
-      this.drawRealisticClimber(false);
+      // Render 2D Animated Climber Figures (Player & AI)
+      this.drawClimberCharacter(true);
+      this.drawClimberCharacter(false);
 
       this.drawParticles(w, h);
     }
@@ -278,55 +266,51 @@ export class MountainRenderer {
     this.ctx.restore();
   }
 
-  drawRealisticSky(w, h) {
+  drawSkyLayer(w, h) {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, '#090d16');
-    grad.addColorStop(0.4, '#1e293b');
-    grad.addColorStop(1, '#064e3b');
+    grad.addColorStop(0.5, '#1e293b');
+    grad.addColorStop(1, '#065f46');
 
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, w, h);
   }
 
-  drawDistantMountainRidges(w, h) {
+  drawDistantMountains(w, h) {
     const scrollOffset = (this.playerVisualProgress * h * 0.35);
 
-    // Far Ridgeline
-    this.ctx.fillStyle = "rgba(30, 41, 59, 0.7)";
+    this.ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
     this.ctx.beginPath();
     this.ctx.moveTo(0, h);
     this.ctx.lineTo(0, h * 0.4 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.3, h * 0.2 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.3, h * 0.22 + scrollOffset * 0.1);
     this.ctx.lineTo(w * 0.6, h * 0.45 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.85, h * 0.22 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.85, h * 0.25 + scrollOffset * 0.1);
     this.ctx.lineTo(w, h * 0.38 + scrollOffset * 0.1);
     this.ctx.lineTo(w, h);
     this.ctx.closePath();
     this.ctx.fill();
   }
 
-  drawGraniteRockFace(w, h) {
+  drawRockWallLayer(w, h) {
     const wallMargin = w * 0.25;
 
-    // Player Track Wall Shading & Fissures
-    const wallGrad = this.ctx.createLinearGradient(wallMargin - 65, 0, wallMargin + 65, 0);
-    wallGrad.addColorStop(0, '#0f172a');
-    wallGrad.addColorStop(0.5, '#1e293b');
-    wallGrad.addColorStop(1, '#0f172a');
+    // Player Track Wall
+    this.ctx.fillStyle = "#1e293b";
+    this.ctx.fillRect(wallMargin - 60, 0, 120, h);
 
-    this.ctx.fillStyle = wallGrad;
-    this.ctx.fillRect(wallMargin - 65, 0, 130, h);
-    this.ctx.fillRect((w - wallMargin) - 65, 0, 130, h);
+    // AI Track Wall
+    this.ctx.fillRect((w - wallMargin) - 60, 0, 120, h);
 
-    // Realistic Rock Fissures & Cracks
+    // Wall Texture Grain Fissures
     this.ctx.strokeStyle = "rgba(248, 250, 252, 0.08)";
     this.ctx.lineWidth = 1.5;
     for (let y = 0; y < h; y += 25) {
       this.ctx.beginPath();
-      this.ctx.moveTo(wallMargin - 60, y);
-      this.ctx.lineTo(wallMargin + 60, y + 10);
-      this.ctx.moveTo((w - wallMargin) - 60, y + 12);
-      this.ctx.lineTo((w - wallMargin) + 60, y + 22);
+      this.ctx.moveTo(wallMargin - 55, y);
+      this.ctx.lineTo(wallMargin + 55, y + 8);
+      this.ctx.moveTo((w - wallMargin) - 55, y + 12);
+      this.ctx.lineTo((w - wallMargin) + 55, y + 20);
       this.ctx.stroke();
     }
   }
@@ -338,7 +322,8 @@ export class MountainRenderer {
         this.ctx.beginPath();
 
         if (hold.type === 'slate') {
-          this.ctx.roundRect(hold.x - hold.size / 2, hold.y - 5, hold.size, 10, 4);
+          // Standard cross-browser rect for holds (no roundRect!)
+          this.ctx.rect(hold.x - hold.size / 2, hold.y - 5, hold.size, 10);
         } else if (hold.type === 'granite') {
           this.ctx.arc(hold.x, hold.y, hold.size / 2, 0, Math.PI * 2);
         } else {
@@ -350,14 +335,14 @@ export class MountainRenderer {
 
         this.ctx.fill();
 
-        // Highlighting Ledge Top
-        this.ctx.fillStyle = "rgba(248, 250, 252, 0.5)";
-        this.ctx.fillRect(hold.x - 5, hold.y - 3, 10, 3);
+        // Chalk Mark on Top of Hold
+        this.ctx.fillStyle = "rgba(248, 250, 252, 0.6)";
+        this.ctx.fillRect(hold.x - 6, hold.y - 4, 12, 3);
       });
     };
 
-    drawHoldList(this.playerHolds, "#38bdf8"); // Ice Blue
-    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red
+    drawHoldList(this.playerHolds, "#38bdf8"); // Ice Blue Holds
+    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red Holds
   }
 
   drawRopesAndSummit(w, h) {
@@ -365,9 +350,10 @@ export class MountainRenderer {
     const playerX = wallMargin;
     const aiX = w - wallMargin;
 
-    const startY = h - 60;
-    const summitY = 70;
+    const startY = h - 50;
+    const summitY = 60;
 
+    // Summit Line
     this.ctx.strokeStyle = "rgba(248, 250, 252, 0.4)";
     this.ctx.lineWidth = 3;
     this.ctx.beginPath();
@@ -375,10 +361,12 @@ export class MountainRenderer {
     this.ctx.lineTo(w * 0.9, summitY);
     this.ctx.stroke();
 
+    // Summit Flag
     this.ctx.font = "28px sans-serif";
     this.ctx.textAlign = "center";
-    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 14);
+    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 12);
 
+    // Player Rope
     this.ctx.strokeStyle = this.playerCosmetics.ropeColor || "#38bdf8";
     this.ctx.lineWidth = 3;
     this.ctx.beginPath();
@@ -386,6 +374,7 @@ export class MountainRenderer {
     this.ctx.lineTo(playerX, summitY);
     this.ctx.stroke();
 
+    // AI Rope
     this.ctx.strokeStyle = "#ef4444";
     this.ctx.beginPath();
     this.ctx.moveTo(aiX, startY);
@@ -393,8 +382,8 @@ export class MountainRenderer {
     this.ctx.stroke();
   }
 
-  // Realistic 2D Animated Character Climber (Human Proportions & Joint Animation)
-  drawRealisticClimber(isPlayer) {
+  // Render 2D Animated Climber Snapped onto Hold (100% Safe cross-browser drawing)
+  drawClimberCharacter(isPlayer) {
     const activeHold = this.getActiveHold(isPlayer);
     if (!activeHold) return;
 
@@ -406,83 +395,86 @@ export class MountainRenderer {
     }
 
     this.ctx.save();
-    const breatheY = Math.sin(this.idleBreathe) * 2.5;
+
+    // Idle breathing bob
+    const breatheY = Math.sin(this.idleBreathe) * 3;
     this.ctx.translate(x, y + breatheY);
 
-    const bodyColor = isPlayer ? "#10b981" : "#ef4444";
-    const skinTone = "#fbcfe8";
+    const mainColor = isPlayer ? "#10b981" : "#ef4444"; // Moss Green or Rust Red
+    const armColor = isPlayer ? "#38bdf8" : "#f8fafc";
+    const skinColor = "#fbcfe8";
 
     const reachOffset = Math.sin(this.climbCycle * 2) * (isPlayer && this.playerTargetProgress > 0 ? 8 : 3);
 
     // 1. Hands Gripping Hold
-    this.ctx.fillStyle = skinTone;
+    this.ctx.fillStyle = skinColor;
     this.ctx.beginPath();
     this.ctx.arc(-8, -activeHold.size / 2, 4, 0, Math.PI * 2);
     this.ctx.arc(8, -activeHold.size / 2, 4, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // 2. Muscular Articulated Arms Reaching
-    this.ctx.strokeStyle = isPlayer ? "#38bdf8" : "#f8fafc";
+    // 2. Muscular Reaching Arms
+    this.ctx.strokeStyle = armColor;
     this.ctx.lineWidth = 5;
     this.ctx.lineCap = "round";
 
+    // Left Arm
     this.ctx.beginPath();
     this.ctx.moveTo(-6, 10);
     this.ctx.lineTo(-14, -6 + reachOffset);
     this.ctx.lineTo(-8, -activeHold.size / 2);
     this.ctx.stroke();
 
+    // Right Arm
     this.ctx.beginPath();
     this.ctx.moveTo(6, 10);
     this.ctx.lineTo(14, -6 - reachOffset);
     this.ctx.lineTo(8, -activeHold.size / 2);
     this.ctx.stroke();
 
-    // 3. Realistic Character Sprite Badge / Torso
-    if (this.climberSpriteImg.complete && isPlayer) {
-      this.ctx.save();
-      this.ctx.beginPath();
-      this.ctx.arc(0, 16, 18, 0, Math.PI * 2);
-      this.ctx.clip();
-      this.ctx.drawImage(this.climberSpriteImg, -18, -2, 36, 36);
-      this.ctx.restore();
-    } else {
-      this.ctx.fillStyle = bodyColor;
-      this.ctx.beginPath();
-      this.ctx.roundRect(-9, 8, 18, 24, 6);
-      this.ctx.fill();
+    // 3. Torso Body
+    this.ctx.fillStyle = mainColor;
+    this.ctx.fillRect(-10, 8, 20, 24);
 
-      // Head & Helmet
-      this.ctx.fillStyle = isPlayer ? "#38bdf8" : "#334155";
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, 8, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
+    // 4. Head & Climbing Helmet
+    this.ctx.fillStyle = isPlayer ? "#38bdf8" : "#334155";
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, 9, 0, Math.PI * 2);
+    this.ctx.fill();
 
-    // 4. Legs pushing off lower footholds
-    this.ctx.strokeStyle = bodyColor;
+    // Eyes
+    this.ctx.fillStyle = "#0b1120";
+    this.ctx.beginPath();
+    this.ctx.arc(-3, -1, 1.5, 0, Math.PI * 2);
+    this.ctx.arc(3, -1, 1.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 5. Legs Pushing Off Lower Wall
+    this.ctx.strokeStyle = mainColor;
     this.ctx.lineWidth = 5;
-    
+
+    // Left Leg
     this.ctx.beginPath();
     this.ctx.moveTo(-6, 32);
-    this.ctx.lineTo(-12, 44);
+    this.ctx.lineTo(-12, 46);
     this.ctx.stroke();
 
+    // Right Leg
     this.ctx.beginPath();
     this.ctx.moveTo(6, 32);
-    this.ctx.lineTo(12, 42);
+    this.ctx.lineTo(12, 44);
     this.ctx.stroke();
 
-    // 5. Label Tag
+    // 6. Label Tag
     this.ctx.font = "800 11px Inter, sans-serif";
     this.ctx.fillStyle = isPlayer ? "#10b981" : "#ef4444";
     this.ctx.textAlign = "center";
-    this.ctx.fillText(isPlayer ? "YOU" : "AI BOT", 0, -24);
+    this.ctx.fillText(isPlayer ? "YOU 🧗" : "BOT 🤖", 0, -22);
 
     this.ctx.restore();
   }
 
-  // 🏎️ Nitro Car Highway Race Interactive Mode
+  // 🏎️ Nitro Car Highway Race Canvas Renderer
   drawNitroCarRace(w, h) {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, '#0f172a');
@@ -490,7 +482,7 @@ export class MountainRenderer {
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, w, h);
 
-    // Dynamic Road Asphalt
+    // Road Track
     const roadTop = h * 0.35;
     this.ctx.fillStyle = "#1e293b";
     this.ctx.beginPath();
@@ -501,10 +493,10 @@ export class MountainRenderer {
     this.ctx.closePath();
     this.ctx.fill();
 
-    // Highway Lane Divider Lines (Moving based on WPM speed)
+    // Dash Lane Divider Lines
     this.ctx.strokeStyle = "#f59e0b";
     this.ctx.lineWidth = 4;
-    const laneOffset = (this.climbCycle * 20) % 40;
+    const laneOffset = (this.climbCycle * 25) % 40;
     for (let y = roadTop; y < h; y += 40) {
       this.ctx.beginPath();
       this.ctx.moveTo(w * 0.5, y + laneOffset);
@@ -512,43 +504,64 @@ export class MountainRenderer {
       this.ctx.stroke();
     }
 
-    // Render Sports Car Sprite with Nitro Flame Exhaust!
-    if (this.nitroCarImg.complete) {
-      const carX = w * 0.5 - 75;
-      const carY = h - 150;
-      this.ctx.drawImage(this.nitroCarImg, carX, carY, 150, 90);
+    // Render Cyber Sports Car
+    const carX = w * 0.5;
+    const carY = h - 110;
 
-      // Nitro Exhaust Flame
-      if (this.playerTargetProgress > 0) {
-        this.ctx.fillStyle = "#38bdf8";
-        this.ctx.beginPath();
-        this.ctx.arc(w * 0.5, carY + 90, Math.random() * 8 + 6, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
+    this.ctx.save();
+    this.ctx.translate(carX, carY);
+
+    // Car Body
+    this.ctx.fillStyle = "#38bdf8";
+    this.ctx.fillRect(-35, -50, 70, 100);
+
+    // Windshield
+    this.ctx.fillStyle = "#0f172a";
+    this.ctx.fillRect(-25, -25, 50, 30);
+
+    // Nitro Exhaust Thruster Flame
+    if (this.playerTargetProgress > 0) {
+      this.ctx.fillStyle = "#f59e0b";
+      this.ctx.beginPath();
+      this.ctx.arc(0, 55, Math.random() * 10 + 8, 0, Math.PI * 2);
+      this.ctx.fill();
     }
+
+    this.ctx.restore();
   }
 
-  // 🚀 Z-Type Space Shooter Interactive Mode
+  // 🚀 Z-Type Space Shooter Canvas Renderer
   drawZTypeSpaceShooter(w, h) {
     this.ctx.fillStyle = "#090d16";
     this.ctx.fillRect(0, 0, w, h);
 
-    // Starfield Background
+    // Starfield Stars
     this.ctx.fillStyle = "#ffffff";
     for (let i = 0; i < 40; i++) {
       const sx = (i * 37) % w;
-      const sy = (i * 53 + this.climbCycle * 10) % h;
+      const sy = (i * 53 + this.climbCycle * 12) % h;
       this.ctx.fillRect(sx, sy, 2, 2);
     }
 
-    // Render Fighter Starship
-    const shipX = w * 0.5 - 50;
-    const shipY = h - 110;
-    if (this.spaceShipImg.complete) {
-      this.ctx.drawImage(this.spaceShipImg, shipX, shipY, 100, 80);
-    }
+    // Render Starship Fighter at Bottom
+    const shipX = w * 0.5;
+    const shipY = h - 80;
 
-    // Render Laser Cannon Beams
+    this.ctx.save();
+    this.ctx.translate(shipX, shipY);
+
+    this.ctx.fillStyle = "#38bdf8";
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, -30);
+    this.ctx.lineTo(-30, 30);
+    this.ctx.lineTo(0, 15);
+    this.ctx.lineTo(30, 30);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    this.ctx.restore();
+
+    // Render Laser Beams
     this.lasers.forEach(l => {
       this.ctx.strokeStyle = `rgba(56, 189, 248, ${l.alpha})`;
       this.ctx.lineWidth = 4;
@@ -558,7 +571,7 @@ export class MountainRenderer {
       this.ctx.stroke();
     });
 
-    // Render Descending Word Asteroids
+    // Render Asteroid Words
     this.asteroids.forEach(a => {
       this.ctx.fillStyle = "#ef4444";
       this.ctx.beginPath();
