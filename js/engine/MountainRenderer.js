@@ -1,28 +1,36 @@
-// Enhanced HTML5 Canvas 2D Parallax Mountain & Dynamic Weather Renderer Engine
+// Human-Crafted 2D Vertical Climbing Wall & Parallax Physics Engine
 
 export class MountainRenderer {
   constructor(canvasElement) {
     this.canvas = canvasElement;
     this.ctx = canvasElement.getContext('2d');
 
-    this.playerProgress = 0; // 0.0 to 1.0
-    this.aiProgress = 0;     // 0.0 to 1.0
+    // Smooth Spring Physics Positions
+    this.playerVisualProgress = 0; // 0.0 to 1.0
+    this.aiVisualProgress = 0;     // 0.0 to 1.0
+
+    this.playerTargetProgress = 0;
+    this.aiTargetProgress = 0;
 
     this.mountainMeta = null;
     this.particles = [];
+    this.chalkDustParticles = [];
+
+    this.playerHolds = [];
+    this.aiHolds = [];
+
+    this.screenShakeTime = 0;
+    this.playerSlipJitter = 0;
+
     this.animFrameId = null;
+    this.climbCycle = 0;
 
     this.playerCosmetics = {
       skin: "🧗‍♂️",
-      color: "#3b82f6",
-      ropeColor: "#3b82f6",
+      ropeColor: "#38bdf8",
       auraColor: "transparent",
       flagIcon: "🚩"
     };
-
-    this.climbFrame = 0;
-    this.lightningTimer = 0;
-    this.isLightning = false;
 
     this.resize = this.resize.bind(this);
     window.addEventListener('resize', this.resize);
@@ -31,15 +39,16 @@ export class MountainRenderer {
   init(mountainMeta, cosmetics = {}) {
     this.mountainMeta = mountainMeta;
     this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
-    this.playerProgress = 0;
-    this.aiProgress = 0;
-    this.resize();
-    this.initParticles();
-    this.startLoop();
-  }
 
-  setCosmetics(cosmetics) {
-    this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
+    this.playerVisualProgress = 0;
+    this.aiVisualProgress = 0;
+    this.playerTargetProgress = 0;
+    this.aiTargetProgress = 0;
+
+    this.resize();
+    this.generateClimbingHolds();
+    this.initWeatherParticles();
+    this.startLoop();
   }
 
   resize() {
@@ -49,24 +58,82 @@ export class MountainRenderer {
     this.canvas.height = rect.height;
   }
 
-  updateProgress(playerRatio, aiRatio) {
-    this.playerProgress += (playerRatio - this.playerProgress) * 0.15;
-    this.aiProgress += (aiRatio - this.aiProgress) * 0.15;
+  // Generate procedural climbing holds up the wall
+  generateClimbingHolds() {
+    this.playerHolds = [];
+    this.aiHolds = [];
+
+    const holdCount = 30; // 30 holds from base to summit
+    const h = this.canvas.height;
+    const startY = h - 60;
+    const summitY = 70;
+    const distY = startY - summitY;
+
+    const wallMargin = this.canvas.width * 0.25;
+    const playerX = wallMargin;
+    const aiX = this.canvas.width - wallMargin;
+
+    for (let i = 0; i <= holdCount; i++) {
+      const ratio = i / holdCount;
+      const baseHoldY = startY - (ratio * distY);
+
+      // Slight horizontal jitter for natural hold layout
+      const pOffsetX = (Math.sin(i * 1.5) * 16);
+      const aiOffsetX = (Math.cos(i * 1.5) * 16);
+
+      this.playerHolds.push({
+        x: playerX + pOffsetX,
+        y: baseHoldY,
+        type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
+        size: 14 + (i % 4) * 3,
+        ratio
+      });
+
+      this.aiHolds.push({
+        x: aiX + aiOffsetX,
+        y: baseHoldY,
+        type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
+        size: 14 + (i % 4) * 3,
+        ratio
+      });
+    }
   }
 
-  initParticles() {
-    this.particles = [];
-    const count = 60;
-    const weather = this.mountainMeta ? this.mountainMeta.weather : 'snow';
+  updateProgress(playerRatio, aiRatio) {
+    this.playerTargetProgress = playerRatio;
+    this.aiTargetProgress = aiRatio;
+  }
 
+  triggerTypoShake() {
+    this.screenShakeTime = 12; // 12 frames camera shake
+    this.playerSlipJitter = 15; // horizontal slip offset
+  }
+
+  emitChalkDust(x, y) {
+    for (let i = 0; i < 12; i++) {
+      this.chalkDustParticles.push({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3 - 1,
+        radius: Math.random() * 4 + 2,
+        alpha: 0.8,
+        color: 'rgba(248, 250, 252, ' // chalk white
+      });
+    }
+  }
+
+  initWeatherParticles() {
+    this.particles = [];
+    const count = 50;
     for (let i = 0; i < count; i++) {
       this.particles.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
-        size: Math.random() * 4 + 1,
-        speedX: (weather === 'snow' || weather === 'ice') ? (Math.random() * 2 - 3) : (Math.random() * 1 - 0.5),
-        speedY: (weather === 'lava') ? (Math.random() * -2 - 1) : (weather === 'rocks' ? Math.random() * 4 + 2 : Math.random() * 2 + 1),
-        opacity: Math.random() * 0.8 + 0.2
+        size: Math.random() * 3 + 1,
+        speedX: Math.random() * 1.5 - 0.75,
+        speedY: Math.random() * 1.5 + 0.5,
+        alpha: Math.random() * 0.7 + 0.2
       });
     }
   }
@@ -75,7 +142,7 @@ export class MountainRenderer {
     if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
 
     const render = () => {
-      this.climbFrame += 0.1;
+      this.updatePhysics();
       this.draw();
       this.animFrameId = requestAnimationFrame(render);
     };
@@ -89,134 +156,183 @@ export class MountainRenderer {
     }
   }
 
+  updatePhysics() {
+    this.climbCycle += 0.08;
+
+    // Smooth Spring Easing for Climber Movement
+    const oldPlayerVisual = this.playerVisualProgress;
+    this.playerVisualProgress += (this.playerTargetProgress - this.playerVisualProgress) * 0.15;
+    this.aiVisualProgress += (this.aiTargetProgress - this.aiVisualProgress) * 0.15;
+
+    // Emit chalk dust on hold landing
+    if (Math.abs(this.playerVisualProgress - oldPlayerVisual) > 0.02) {
+      const activeHold = this.getActiveHold(true);
+      if (activeHold) this.emitChalkDust(activeHold.x, activeHold.y);
+    }
+
+    // Decay shake and slip jitter
+    if (this.screenShakeTime > 0) this.screenShakeTime--;
+    if (this.playerSlipJitter > 0) this.playerSlipJitter *= 0.85;
+
+    // Update chalk particles
+    this.chalkDustParticles.forEach((p, idx) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.03;
+      if (p.alpha <= 0) this.chalkDustParticles.splice(idx, 1);
+    });
+  }
+
+  getActiveHold(isPlayer) {
+    const holds = isPlayer ? this.playerHolds : this.aiHolds;
+    const progress = isPlayer ? this.playerVisualProgress : this.aiVisualProgress;
+    if (holds.length === 0) return null;
+
+    const index = Math.min(holds.length - 1, Math.floor(progress * (holds.length - 1)));
+    return holds[index];
+  }
+
   draw() {
     if (!this.canvas || !this.ctx) return;
     const w = this.canvas.width;
     const h = this.canvas.height;
 
+    this.ctx.save();
+
+    // Camera Screen Shake on Typo
+    if (this.screenShakeTime > 0) {
+      const dx = (Math.random() - 0.5) * 8;
+      const dy = (Math.random() - 0.5) * 8;
+      this.ctx.translate(dx, dy);
+    }
+
     this.ctx.clearRect(0, 0, w, h);
 
-    // 1. Multi-layer Parallax Background
-    this.drawBackgroundSky(w, h);
-    this.drawParallaxMountains(w, h);
+    // 1. LAYER 1: Distant Sky & Clouds (10% Speed)
+    this.drawSkyLayer(w, h);
 
-    // 2. Vertical Cliff Wall & Ropes
-    const wallMargin = w * 0.25;
-    const playerX = wallMargin;
-    const aiX = w - wallMargin;
+    // 2. LAYER 2: Distant Alpine Mountain Ridges (35% Speed)
+    this.drawDistantMountainLayer(w, h);
 
-    const startY = h - 45;
-    const summitY = 55;
-    const totalClimbDist = startY - summitY;
+    // 3. LAYER 3: Immediate Rock Wall Face & Climbing Holds (100% Speed)
+    this.drawRockWallLayer(w, h);
+    this.drawClimbingHolds();
 
-    this.drawCliffTextures(w, h, playerX, aiX);
-    this.drawRopes(playerX, aiX, startY, summitY);
-    this.drawSummitFlag(w, summitY);
+    // 4. Ropes & Summit Flag
+    this.drawRopesAndSummit(w, h);
 
-    // 3. Climber Avatars
-    const playerY = startY - (this.playerProgress * totalClimbDist);
-    const aiY = startY - (this.aiProgress * totalClimbDist);
+    // 5. 2D Vector Climber Figures (Snapped to Holds!)
+    this.drawVectorClimber(true);  // Player Climber
+    this.drawVectorClimber(false); // AI Opponent Climber
 
-    this.drawClimber(playerX, playerY, true);
-    this.drawClimber(aiX, aiY, false);
+    // 6. Chalk Dust & Weather Particles
+    this.drawParticles(w, h);
 
-    // 4. Weather & Atmospheric Particles
-    this.drawWeatherEffects(w, h);
+    this.ctx.restore();
   }
 
-  drawBackgroundSky(w, h) {
-    const weather = this.mountainMeta ? this.mountainMeta.weather : 'sun';
+  drawSkyLayer(w, h) {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
-
-    if (weather === 'lava') {
-      grad.addColorStop(0, '#180909');
-      grad.addColorStop(0.5, '#2a0e0e');
-      grad.addColorStop(1, '#450a0a');
-    } else if (weather === 'snow' || weather === 'ice') {
-      grad.addColorStop(0, '#030712');
-      grad.addColorStop(0.5, '#0f172a');
-      grad.addColorStop(1, '#1e293b');
-    } else if (weather === 'storm') {
-      if (this.isLightning) {
-        grad.addColorStop(0, '#38bdf8');
-        grad.addColorStop(1, '#1e1b4b');
-      } else {
-        grad.addColorStop(0, '#09090b');
-        grad.addColorStop(1, '#2e1065');
-      }
-    } else {
-      grad.addColorStop(0, '#0f172a');
-      grad.addColorStop(0.5, '#1e3a8a');
-      grad.addColorStop(1, '#065f46');
-    }
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(0.5, '#1e293b');
+    grad.addColorStop(1, '#090d16');
 
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, w, h);
-
-    if (weather === 'storm') {
-      this.lightningTimer++;
-      if (this.lightningTimer > 160 && Math.random() < 0.06) {
-        this.isLightning = true;
-        setTimeout(() => { this.isLightning = false; }, 80);
-        this.lightningTimer = 0;
-      }
-    }
   }
 
-  drawParallaxMountains(w, h) {
-    // Layer 1: Distant Sky Silhouette
-    this.ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, h);
-    this.ctx.lineTo(0, h * 0.45);
-    this.ctx.lineTo(w * 0.2, h * 0.25);
-    this.ctx.lineTo(w * 0.45, h * 0.4);
-    this.ctx.lineTo(w * 0.7, h * 0.2);
-    this.ctx.lineTo(w, h * 0.35);
-    this.ctx.lineTo(w, h);
-    this.ctx.closePath();
-    this.ctx.fill();
+  drawDistantMountainLayer(w, h) {
+    const scrollOffset = (this.playerVisualProgress * h * 0.35);
 
-    // Layer 2: Mid-ground Peaks with Glowing Peaks
-    this.ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
+    this.ctx.fillStyle = "rgba(30, 41, 59, 0.6)";
     this.ctx.beginPath();
     this.ctx.moveTo(0, h);
-    this.ctx.lineTo(0, h * 0.55);
-    this.ctx.lineTo(w * 0.3, h * 0.35);
-    this.ctx.lineTo(w * 0.6, h * 0.5);
-    this.ctx.lineTo(w * 0.85, h * 0.3);
-    this.ctx.lineTo(w, h * 0.45);
+    this.ctx.lineTo(0, h * 0.4 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.25, h * 0.2 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.55, h * 0.45 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.8, h * 0.25 + scrollOffset * 0.1);
+    this.ctx.lineTo(w, h * 0.4 + scrollOffset * 0.1);
     this.ctx.lineTo(w, h);
     this.ctx.closePath();
     this.ctx.fill();
   }
 
-  drawCliffTextures(w, h, playerX, aiX) {
-    // Left Rock Face
-    this.ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
-    this.ctx.fillRect(playerX - 60, 0, 120, h);
+  drawRockWallLayer(w, h) {
+    const wallMargin = w * 0.25;
 
-    // Right Rock Face
-    this.ctx.fillRect(aiX - 60, 0, 120, h);
+    // Player Climbing Track Wall
+    this.ctx.fillStyle = "#1e293b";
+    this.ctx.fillRect(wallMargin - 55, 0, 110, h);
 
-    // Crag texture details
-    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    // AI Climbing Track Wall
+    this.ctx.fillRect((w - wallMargin) - 55, 0, 110, h);
+
+    // Wall Texture Grain Lines
+    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.05)";
     this.ctx.lineWidth = 1;
-    for (let y = 20; y < h; y += 40) {
+    for (let y = 0; y < h; y += 30) {
       this.ctx.beginPath();
-      this.ctx.moveTo(playerX - 50, y);
-      this.ctx.lineTo(playerX + 50, y + 10);
-      this.ctx.moveTo(aiX - 50, y + 15);
-      this.ctx.lineTo(aiX + 50, y + 25);
+      this.ctx.moveTo(wallMargin - 50, y);
+      this.ctx.lineTo(wallMargin + 50, y + 8);
+      this.ctx.moveTo((w - wallMargin) - 50, y + 12);
+      this.ctx.lineTo((w - wallMargin) + 50, y + 20);
       this.ctx.stroke();
     }
   }
 
-  drawRopes(playerX, aiX, startY, summitY) {
-    this.ctx.lineWidth = 4;
+  drawClimbingHolds() {
+    const drawHoldList = (list, color) => {
+      list.forEach(hold => {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+
+        if (hold.type === 'slate') {
+          this.ctx.roundRect(hold.x - hold.size / 2, hold.y - 4, hold.size, 8, 3);
+        } else if (hold.type === 'granite') {
+          this.ctx.arc(hold.x, hold.y, hold.size / 2.2, 0, Math.PI * 2);
+        } else {
+          this.ctx.moveTo(hold.x - hold.size / 2, hold.y + 4);
+          this.ctx.lineTo(hold.x, hold.y - 6);
+          this.ctx.lineTo(hold.x + hold.size / 2, hold.y + 4);
+          this.ctx.closePath();
+        }
+
+        this.ctx.fill();
+
+        // Chalk mark on hold
+        this.ctx.fillStyle = "rgba(248, 250, 252, 0.4)";
+        this.ctx.fillRect(hold.x - 4, hold.y - 2, 8, 3);
+      });
+    };
+
+    drawHoldList(this.playerHolds, "#38bdf8"); // Sky Blue holds
+    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red holds
+  }
+
+  drawRopesAndSummit(w, h) {
+    const wallMargin = w * 0.25;
+    const playerX = wallMargin;
+    const aiX = w - wallMargin;
+
+    const startY = h - 60;
+    const summitY = 70;
+
+    // Summit Ledge Line
+    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.3)";
+    this.ctx.lineWidth = 3;
+    this.ctx.beginPath();
+    this.ctx.moveTo(w * 0.1, summitY);
+    this.ctx.lineTo(w * 0.9, summitY);
+    this.ctx.stroke();
+
+    // Summit Flag
+    this.ctx.font = "26px sans-serif";
+    this.ctx.textAlign = "center";
+    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 12);
 
     // Player Rope
-    this.ctx.strokeStyle = this.playerCosmetics.ropeColor || '#3b82f6';
+    this.ctx.strokeStyle = this.playerCosmetics.ropeColor || "#38bdf8";
+    this.ctx.lineWidth = 3;
     this.ctx.beginPath();
     this.ctx.moveTo(playerX, startY);
     this.ctx.lineTo(playerX, summitY);
@@ -230,76 +346,105 @@ export class MountainRenderer {
     this.ctx.stroke();
   }
 
-  drawSummitFlag(w, summitY) {
-    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(w * 0.1, summitY);
-    this.ctx.lineTo(w * 0.9, summitY);
-    this.ctx.stroke();
+  // Render Vector Articulated 2D Climber Snapped to Hold
+  drawVectorClimber(isPlayer) {
+    const activeHold = this.getActiveHold(isPlayer);
+    if (!activeHold) return;
 
-    this.ctx.font = "24px sans-serif";
-    this.ctx.textAlign = "center";
-    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 10);
-  }
+    let x = activeHold.x;
+    let y = activeHold.y;
 
-  drawClimber(x, y, isPlayer) {
-    this.ctx.save();
-    
-    // Add micro climb wobble
-    const wobbleY = Math.sin(this.climbFrame * 2) * (isPlayer && this.playerProgress > 0 ? 3 : 1);
-    this.ctx.translate(x, y + wobbleY);
-
-    if (isPlayer && this.playerCosmetics.auraColor && this.playerCosmetics.auraColor !== 'transparent') {
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, 24, 0, Math.PI * 2);
-      this.ctx.fillStyle = this.playerCosmetics.auraColor;
-      this.ctx.shadowColor = this.playerCosmetics.auraColor;
-      this.ctx.shadowBlur = 15;
-      this.ctx.globalAlpha = 0.5;
-      this.ctx.fill();
-      this.ctx.globalAlpha = 1.0;
-      this.ctx.shadowBlur = 0;
+    if (isPlayer) {
+      x += this.playerSlipJitter; // Apply typo slip jitter if mistake made
     }
 
-    this.ctx.font = "28px sans-serif";
-    this.ctx.textAlign = "center";
-    this.ctx.textBaseline = "middle";
+    this.ctx.save();
+    this.ctx.translate(x, y);
 
-    const icon = isPlayer ? (this.playerCosmetics.skin || "🧗‍♂️") : "🤖";
-    this.ctx.fillText(icon, 0, 0);
+    const bodyColor = isPlayer ? "#10b981" : "#ef4444"; // Moss Green or Rust Red
+    const limbColor = isPlayer ? "#38bdf8" : "#f8fafc";
 
-    this.ctx.font = "bold 11px Inter, sans-serif";
+    // Dynamic arm reach cycle
+    const reachOffset = Math.sin(this.climbCycle * 2) * (isPlayer && this.playerTargetProgress > 0 ? 6 : 2);
+
+    // 1. Arms reaching up to hold
+    this.ctx.strokeStyle = limbColor;
+    this.ctx.lineWidth = 4;
+    this.ctx.lineCap = "round";
+
+    // Left Arm
+    this.ctx.beginPath();
+    this.ctx.moveTo(-6, 8);
+    this.ctx.lineTo(-12, -8 + reachOffset);
+    this.ctx.lineTo(0, -activeHold.size / 2);
+    this.ctx.stroke();
+
+    // Right Arm
+    this.ctx.beginPath();
+    this.ctx.moveTo(6, 8);
+    this.ctx.lineTo(12, -8 - reachOffset);
+    this.ctx.lineTo(0, -activeHold.size / 2);
+    this.ctx.stroke();
+
+    // 2. Torso / Body
+    this.ctx.fillStyle = bodyColor;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-8, 6, 16, 22, 4);
+    this.ctx.fill();
+
+    // 3. Head & Helmet
+    this.ctx.fillStyle = isPlayer ? "#f8fafc" : "#334155";
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 4. Legs pushing off lower wall
+    this.ctx.strokeStyle = bodyColor;
+    this.ctx.lineWidth = 4;
+    
+    // Left Leg
+    this.ctx.beginPath();
+    this.ctx.moveTo(-5, 28);
+    this.ctx.lineTo(-10, 42);
+    this.ctx.stroke();
+
+    // Right Leg
+    this.ctx.beginPath();
+    this.ctx.moveTo(5, 28);
+    this.ctx.lineTo(10, 40);
+    this.ctx.stroke();
+
+    // 5. Label Tag
+    this.ctx.font = "700 10px Inter, sans-serif";
     this.ctx.fillStyle = isPlayer ? "#10b981" : "#ef4444";
+    this.ctx.textAlign = "center";
     this.ctx.fillText(isPlayer ? "YOU" : "AI BOT", 0, -22);
 
     this.ctx.restore();
   }
 
-  drawWeatherEffects(w, h) {
-    const weather = this.mountainMeta ? this.mountainMeta.weather : 'sun';
-
+  drawParticles(w, h) {
+    // Render Weather Particles
     this.ctx.save();
     this.particles.forEach(p => {
       p.x += p.speedX;
       p.y += p.speedY;
 
       if (p.y > h) p.y = 0;
-      if (p.y < 0) p.y = h;
       if (p.x > w) p.x = 0;
       if (p.x < 0) p.x = w;
 
+      this.ctx.fillStyle = `rgba(248, 250, 252, ${p.alpha})`;
       this.ctx.beginPath();
-      if (weather === 'lava') {
-        this.ctx.fillStyle = `rgba(255, 69, 0, ${p.opacity})`;
-        this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      } else if (weather === 'rocks') {
-        this.ctx.fillStyle = `rgba(148, 163, 184, ${p.opacity})`;
-        this.ctx.fillRect(p.x, p.y, p.size * 2, p.size * 2);
-      } else {
-        this.ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
-        this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      }
+      this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      this.ctx.fill();
+    });
+
+    // Render Chalk Dust Particles
+    this.chalkDustParticles.forEach(p => {
+      this.ctx.fillStyle = `${p.color}${p.alpha})`;
+      this.ctx.beginPath();
+      this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       this.ctx.fill();
     });
     this.ctx.restore();

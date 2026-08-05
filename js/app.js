@@ -1,4 +1,4 @@
-// TypeClimber Main Application Coordinator (V2 Update)
+// TypeClimber Main Application Coordinator (V3 Human-Crafted Engine)
 
 import { StorageManager } from './managers/StorageManager.js';
 import { SoundManager } from './engine/SoundManager.js';
@@ -31,7 +31,6 @@ class TypeClimberApp {
   }
 
   init() {
-    // Apply saved audio settings (Default = 0 muted per user specification)
     const set = this.storage.data.settings;
     this.sound.setVolumes(set.sfxVolume, set.musicVolume, set.ambienceVolume);
     this.sound.setSwitchProfile(set.switchSound);
@@ -81,12 +80,9 @@ class TypeClimberApp {
       },
       onError: (char) => {
         this.sound.playErrorSound();
-        if (this.storage.data.settings.screenshake) {
-          const arena = document.querySelector(".typing-arena");
-          if (arena) {
-            arena.classList.add("shake-effect");
-            setTimeout(() => arena.classList.remove("shake-effect"), 200);
-          }
+        // Trigger camera shake & climber slip jitter
+        if (this.renderer) {
+          this.renderer.triggerTypoShake();
         }
         this.updateGameplayMetrics();
       },
@@ -159,7 +155,6 @@ class TypeClimberApp {
     this.playerAltitude = 0;
     this.aiAltitude = 0;
 
-    // Show ready start banner
     const readyBanner = document.getElementById("ready-start-banner");
     if (readyBanner) readyBanner.classList.remove("started");
 
@@ -186,7 +181,7 @@ class TypeClimberApp {
 
     const cosmetics = {
       skin: skinObj ? skinObj.icon : "🧗‍♂️",
-      ropeColor: ropeObj ? ropeObj.color : "#3b82f6",
+      ropeColor: ropeObj ? ropeObj.color : "#38bdf8",
       auraColor: auraObj ? auraObj.color : "transparent",
       flagIcon: flagObj ? flagObj.icon : "🚩"
     };
@@ -223,16 +218,13 @@ class TypeClimberApp {
     if (this.raceStarted) return;
     this.raceStarted = true;
 
-    // Hide ready banner
     const readyBanner = document.getElementById("ready-start-banner");
     if (readyBanner) readyBanner.classList.add("started");
 
-    // Start AI Opponent climbing
     if (this.ai && this.modeManager.currentMode !== "zen") {
       this.ai.start();
     }
 
-    // Start Timer
     this.modeManager.startTimer((sec) => {
       const timerEl = document.getElementById("hud-timer");
       if (timerEl) timerEl.textContent = this.modeManager.formatTime(sec);
@@ -356,7 +348,6 @@ class TypeClimberApp {
       }
     }
 
-    // Save Stats, Match History & Key Diagnostic Analytics
     this.storage.recordMatch({
       won,
       wpm,
