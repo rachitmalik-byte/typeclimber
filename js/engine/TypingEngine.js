@@ -1,4 +1,4 @@
-// Typing Engine: Real-time Keystroke Validator & Analytics Diagnostic Tracker
+// Typing Engine: Real-time Keystroke Validator (Non-Blocking Character Typing)
 
 export class TypingEngine {
   constructor(callbacks = {}) {
@@ -15,11 +15,10 @@ export class TypingEngine {
     this.comboCount = 0;
     this.maxCombo = 0;
 
-    this.hasStarted = false; // Deferred start trigger (Starts on first valid keystroke)
+    this.hasStarted = false;
     this.startTime = null;
     this.endTime = null;
     this.isFinished = false;
-    this.hasMistake = false;
 
     this.callbacks = {
       onFirstKey: callbacks.onFirstKey || (() => {}),
@@ -42,11 +41,10 @@ export class TypingEngine {
     this.comboCount = 0;
     this.maxCombo = 0;
 
-    this.hasStarted = false; // Remains false until user types first key
+    this.hasStarted = false;
     this.startTime = null;
     this.endTime = null;
     this.isFinished = false;
-    this.hasMistake = false;
 
     this.render();
   }
@@ -59,7 +57,6 @@ export class TypingEngine {
       if (this.currentIndex > 0) {
         this.currentIndex--;
         this.typedChars.pop();
-        this.hasMistake = this.typedChars.some(item => item.status === 'wrong');
         this.render();
       }
       return;
@@ -68,7 +65,7 @@ export class TypingEngine {
     // Ignore non-printable keys
     if (key.length > 1) return;
 
-    // FIRST KEYSTROKE RACE TRIGGER!
+    // FIRST KEYSTROKE RACE TRIGGER
     if (!this.hasStarted) {
       this.hasStarted = true;
       this.startTime = Date.now();
@@ -78,8 +75,9 @@ export class TypingEngine {
     this.totalKeystrokes++;
     const targetChar = this.passageText[this.currentIndex];
 
-    // Keystroke Match Check
-    if (key === targetChar && !this.hasMistake) {
+    // Non-blocking character evaluation
+    if (key === targetChar) {
+      // Correct character typed (rendered green)
       this.correctKeystrokes++;
       this.comboCount++;
       if (this.comboCount > this.maxCombo) {
@@ -90,19 +88,11 @@ export class TypingEngine {
       this.currentIndex++;
 
       this.callbacks.onCorrect(key, this.comboCount);
-
-      if (this.currentIndex >= this.passageText.length) {
-        this.isFinished = true;
-        this.endTime = Date.now();
-        this.callbacks.onComplete();
-      }
     } else {
-      // Mistake Keystroke!
+      // Incorrect character typed (rendered red, but cursor advances forward!)
       this.mistakesCount++;
-      this.comboCount = 0;
-      this.hasMistake = true;
+      this.comboCount = 0; // Combo resets on typo
 
-      // Track weak key diagnostic
       const lowerTarget = targetChar ? targetChar.toLowerCase() : key.toLowerCase();
       this.keyMistakes[lowerTarget] = (this.keyMistakes[lowerTarget] || 0) + 1;
 
@@ -110,6 +100,13 @@ export class TypingEngine {
       this.currentIndex++;
 
       this.callbacks.onError(key);
+    }
+
+    // Check if end of passage reached
+    if (this.currentIndex >= this.passageText.length) {
+      this.isFinished = true;
+      this.endTime = Date.now();
+      this.callbacks.onComplete();
     }
 
     this.render();
@@ -127,7 +124,8 @@ export class TypingEngine {
         if (typed && typed.status === 'correct') {
           html += `<span class="char-correct">${this.escapeHtml(char)}</span>`;
         } else {
-          html += `<span class="char-wrong">${this.escapeHtml(char)}</span>`;
+          // Render mistyped character in red
+          html += `<span class="char-wrong">${this.escapeHtml(typed ? typed.char : char)}</span>`;
         }
       } else if (i === this.currentIndex) {
         html += `<span class="char-current">${this.escapeHtml(char)}</span>`;
