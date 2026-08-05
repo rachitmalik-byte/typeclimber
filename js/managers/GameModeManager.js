@@ -1,12 +1,26 @@
-// Game Mode Coordinator (Campaign, Free Play, Boulder Dodge, Speed Sprint, Zen, Time Attack, Survival, Duel)
+// Game Mode Coordinator (Campaign, Free Play, Nitro Car, Z-Type Space Shooter, Boulder Dodge, Speed Sprint, Zen, Time Attack, Survival, Duel)
 
 import { SENTENCE_DATABASE, MOUNTAIN_DEFINITIONS, BOULDER_WORDS, SPRINT_WORDS, ZEN_PASSAGES } from '../data/sentences.js';
+
+export const NITRO_CAR_SENTENCES = [
+  "Rev your sports car engine and shift into top gear with lightning fast typing.",
+  "Hit the nitro boost thrusters to blast past opponent racers on the highway.",
+  "Precision steering and rapid keystrokes dominate the high speed circuit.",
+  "Overtake rival supercars as your WPM speedometer surges past one hundred.",
+  "Flawless accuracy ignites blue exhaust flames and leaves opponents in dust."
+];
+
+export const ZTYPE_SPACE_WORDS = [
+  "ASTEROID", "PULSE", "CYBER", "VELOCITY", "SPECTRUM", "TITAN", "ORBIT",
+  "GALAXY", "METEOR", "PHOTON", "QUASAR", "LASER", "COSMIC", "STarlight",
+  "NEBULA", "THRUSTER", "HYPER", "PLASMA", "VECTOR", "HORIZON", "ECLIPSE"
+];
 
 export class GameModeManager {
   constructor(app) {
     this.app = app;
 
-    this.currentMode = "campaign"; // campaign, freeplay, boulder, sprint, zen, timeattack, survival, duel
+    this.currentMode = "campaign";
     this.currentMountain = MOUNTAIN_DEFINITIONS[0];
     this.currentDifficulty = "medium";
 
@@ -27,7 +41,11 @@ export class GameModeManager {
     // Select passage pool based on mode & difficulty
     let pool = SENTENCE_DATABASE[this.currentDifficulty] || SENTENCE_DATABASE["medium"];
 
-    if (mode === "boulder") {
+    if (mode === "nitro") {
+      pool = NITRO_CAR_SENTENCES;
+    } else if (mode === "ztype") {
+      pool = ZTYPE_SPACE_WORDS;
+    } else if (mode === "boulder") {
       pool = BOULDER_WORDS;
     } else if (mode === "sprint") {
       pool = SPRINT_WORDS;
@@ -54,7 +72,7 @@ export class GameModeManager {
   }
 
   getUpcomingPassage() {
-    if (this.passageList.length <= 1) return "Keep climbing towards the peak!";
+    if (this.passageList.length <= 1) return "Keep typing towards victory!";
     return this.passageList[(this.passageIndex + 1) % this.passageList.length];
   }
 

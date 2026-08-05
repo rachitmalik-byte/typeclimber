@@ -1,4 +1,4 @@
-// Advanced 2D Animated Character & Multi-Game Rendering Engine
+// Realistic 2D Animated Climber & Interactive Arcade Rendering Engine
 
 export class MountainRenderer {
   constructor(canvasElement) {
@@ -15,8 +15,8 @@ export class MountainRenderer {
     this.mountainMeta = null;
     this.particles = [];
     this.chalkDustParticles = [];
-    this.asteroids = [];
     this.lasers = [];
+    this.asteroids = [];
 
     this.playerHolds = [];
     this.aiHolds = [];
@@ -28,7 +28,7 @@ export class MountainRenderer {
     this.climbCycle = 0;
     this.idleBreathe = 0;
 
-    // Load Sprite Images
+    // Load High-Res Sprite Assets
     this.climberSpriteImg = new Image();
     this.climberSpriteImg.src = "assets/images/climber_sprite.jpg";
 
@@ -91,14 +91,14 @@ export class MountainRenderer {
       const ratio = i / holdCount;
       const baseHoldY = startY - (ratio * distY);
 
-      const pOffsetX = (Math.sin(i * 1.5) * 16);
-      const aiOffsetX = (Math.cos(i * 1.5) * 16);
+      const pOffsetX = (Math.sin(i * 1.5) * 18);
+      const aiOffsetX = (Math.cos(i * 1.5) * 18);
 
       this.playerHolds.push({
         x: playerX + pOffsetX,
         y: baseHoldY,
         type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
-        size: 14 + (i % 4) * 3,
+        size: 16 + (i % 4) * 4,
         ratio
       });
 
@@ -106,7 +106,7 @@ export class MountainRenderer {
         x: aiX + aiOffsetX,
         y: baseHoldY,
         type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
-        size: 14 + (i % 4) * 3,
+        size: 16 + (i % 4) * 4,
         ratio
       });
     }
@@ -118,11 +118,11 @@ export class MountainRenderer {
     const w = this.canvas.width;
     for (let i = 0; i < words.length; i++) {
       this.asteroids.push({
-        x: Math.random() * (w - 200) + 100,
-        y: -100 - (i * 120),
+        x: Math.random() * (w - 240) + 120,
+        y: -100 - (i * 130),
         word: words[i],
-        speedY: 0.8 + Math.random() * 0.5,
-        radius: 30
+        speedY: 0.9 + Math.random() * 0.4,
+        radius: 32
       });
     }
   }
@@ -130,6 +130,18 @@ export class MountainRenderer {
   updateProgress(playerRatio, aiRatio) {
     this.playerTargetProgress = playerRatio;
     this.aiTargetProgress = aiRatio;
+
+    // Trigger Z-Type Laser Cannon Shot on Keystroke Update
+    if (this.renderMode === "ztype" && this.asteroids.length > 0) {
+      const target = this.asteroids[0];
+      this.lasers.push({
+        x1: this.canvas.width * 0.5,
+        y1: this.canvas.height - 90,
+        x2: target.x,
+        y2: target.y,
+        alpha: 1.0
+      });
+    }
   }
 
   triggerTypoShake() {
@@ -138,21 +150,21 @@ export class MountainRenderer {
   }
 
   emitChalkDust(x, y) {
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 16; i++) {
       this.chalkDustParticles.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 3.5,
-        vy: (Math.random() - 0.5) * 3.5 - 1.2,
-        radius: Math.random() * 4 + 2,
-        alpha: 0.85
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4 - 1.5,
+        radius: Math.random() * 5 + 2,
+        alpha: 0.9
       });
     }
   }
 
   initWeatherParticles() {
     this.particles = [];
-    const count = 60;
+    const count = 70;
     for (let i = 0; i < count; i++) {
       this.particles.push({
         x: Math.random() * this.canvas.width,
@@ -206,6 +218,12 @@ export class MountainRenderer {
       if (p.alpha <= 0) this.chalkDustParticles.splice(idx, 1);
     });
 
+    // Update Z-Type Laser Beams
+    this.lasers.forEach((l, idx) => {
+      l.alpha -= 0.1;
+      if (l.alpha <= 0) this.lasers.splice(idx, 1);
+    });
+
     if (this.renderMode === "ztype") {
       this.asteroids.forEach(a => {
         a.y += a.speedY;
@@ -243,14 +261,14 @@ export class MountainRenderer {
     } else if (this.renderMode === "ztype") {
       this.drawZTypeSpaceShooter(w, h);
     } else {
-      // Default Mountain Climb Mode
-      this.drawSkyLayer(w, h);
-      this.drawDistantMountains(w, h);
-      this.drawRockWallLayer(w, h);
+      // Default Realistic 2D Mountain Climb
+      this.drawRealisticSky(w, h);
+      this.drawDistantMountainRidges(w, h);
+      this.drawGraniteRockFace(w, h);
       this.drawClimbingHolds();
       this.drawRopesAndSummit(w, h);
 
-      // Render Realistic 2D Character Climbers
+      // Render Realistic 2D Animated Character Climber
       this.drawRealisticClimber(true);
       this.drawRealisticClimber(false);
 
@@ -260,47 +278,55 @@ export class MountainRenderer {
     this.ctx.restore();
   }
 
-  drawSkyLayer(w, h) {
+  drawRealisticSky(w, h) {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#0b1120');
-    grad.addColorStop(0.5, '#1e293b');
-    grad.addColorStop(1, '#090d16');
+    grad.addColorStop(0, '#090d16');
+    grad.addColorStop(0.4, '#1e293b');
+    grad.addColorStop(1, '#064e3b');
 
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, w, h);
   }
 
-  drawDistantMountains(w, h) {
+  drawDistantMountainRidges(w, h) {
     const scrollOffset = (this.playerVisualProgress * h * 0.35);
 
-    this.ctx.fillStyle = "rgba(30, 41, 59, 0.65)";
+    // Far Ridgeline
+    this.ctx.fillStyle = "rgba(30, 41, 59, 0.7)";
     this.ctx.beginPath();
     this.ctx.moveTo(0, h);
-    this.ctx.lineTo(0, h * 0.45 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.25, h * 0.25 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.55, h * 0.45 + scrollOffset * 0.1);
-    this.ctx.lineTo(w * 0.8, h * 0.25 + scrollOffset * 0.1);
-    this.ctx.lineTo(w, h * 0.4 + scrollOffset * 0.1);
+    this.ctx.lineTo(0, h * 0.4 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.3, h * 0.2 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.6, h * 0.45 + scrollOffset * 0.1);
+    this.ctx.lineTo(w * 0.85, h * 0.22 + scrollOffset * 0.1);
+    this.ctx.lineTo(w, h * 0.38 + scrollOffset * 0.1);
     this.ctx.lineTo(w, h);
     this.ctx.closePath();
     this.ctx.fill();
   }
 
-  drawRockWallLayer(w, h) {
+  drawGraniteRockFace(w, h) {
     const wallMargin = w * 0.25;
 
-    this.ctx.fillStyle = "#1e293b";
-    this.ctx.fillRect(wallMargin - 55, 0, 110, h);
-    this.ctx.fillRect((w - wallMargin) - 55, 0, 110, h);
+    // Player Track Wall Shading & Fissures
+    const wallGrad = this.ctx.createLinearGradient(wallMargin - 65, 0, wallMargin + 65, 0);
+    wallGrad.addColorStop(0, '#0f172a');
+    wallGrad.addColorStop(0.5, '#1e293b');
+    wallGrad.addColorStop(1, '#0f172a');
 
-    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.05)";
-    this.ctx.lineWidth = 1;
-    for (let y = 0; y < h; y += 30) {
+    this.ctx.fillStyle = wallGrad;
+    this.ctx.fillRect(wallMargin - 65, 0, 130, h);
+    this.ctx.fillRect((w - wallMargin) - 65, 0, 130, h);
+
+    // Realistic Rock Fissures & Cracks
+    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.08)";
+    this.ctx.lineWidth = 1.5;
+    for (let y = 0; y < h; y += 25) {
       this.ctx.beginPath();
-      this.ctx.moveTo(wallMargin - 50, y);
-      this.ctx.lineTo(wallMargin + 50, y + 8);
-      this.ctx.moveTo((w - wallMargin) - 50, y + 12);
-      this.ctx.lineTo((w - wallMargin) + 50, y + 20);
+      this.ctx.moveTo(wallMargin - 60, y);
+      this.ctx.lineTo(wallMargin + 60, y + 10);
+      this.ctx.moveTo((w - wallMargin) - 60, y + 12);
+      this.ctx.lineTo((w - wallMargin) + 60, y + 22);
       this.ctx.stroke();
     }
   }
@@ -312,25 +338,26 @@ export class MountainRenderer {
         this.ctx.beginPath();
 
         if (hold.type === 'slate') {
-          this.ctx.roundRect(hold.x - hold.size / 2, hold.y - 4, hold.size, 8, 3);
+          this.ctx.roundRect(hold.x - hold.size / 2, hold.y - 5, hold.size, 10, 4);
         } else if (hold.type === 'granite') {
-          this.ctx.arc(hold.x, hold.y, hold.size / 2.2, 0, Math.PI * 2);
+          this.ctx.arc(hold.x, hold.y, hold.size / 2, 0, Math.PI * 2);
         } else {
-          this.ctx.moveTo(hold.x - hold.size / 2, hold.y + 4);
-          this.ctx.lineTo(hold.x, hold.y - 6);
-          this.ctx.lineTo(hold.x + hold.size / 2, hold.y + 4);
+          this.ctx.moveTo(hold.x - hold.size / 2, hold.y + 5);
+          this.ctx.lineTo(hold.x, hold.y - 8);
+          this.ctx.lineTo(hold.x + hold.size / 2, hold.y + 5);
           this.ctx.closePath();
         }
 
         this.ctx.fill();
 
-        this.ctx.fillStyle = "rgba(248, 250, 252, 0.4)";
-        this.ctx.fillRect(hold.x - 4, hold.y - 2, 8, 3);
+        // Highlighting Ledge Top
+        this.ctx.fillStyle = "rgba(248, 250, 252, 0.5)";
+        this.ctx.fillRect(hold.x - 5, hold.y - 3, 10, 3);
       });
     };
 
-    drawHoldList(this.playerHolds, "#38bdf8");
-    drawHoldList(this.aiHolds, "#ef4444");
+    drawHoldList(this.playerHolds, "#38bdf8"); // Ice Blue
+    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red
   }
 
   drawRopesAndSummit(w, h) {
@@ -341,16 +368,16 @@ export class MountainRenderer {
     const startY = h - 60;
     const summitY = 70;
 
-    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.3)";
+    this.ctx.strokeStyle = "rgba(248, 250, 252, 0.4)";
     this.ctx.lineWidth = 3;
     this.ctx.beginPath();
     this.ctx.moveTo(w * 0.1, summitY);
     this.ctx.lineTo(w * 0.9, summitY);
     this.ctx.stroke();
 
-    this.ctx.font = "26px sans-serif";
+    this.ctx.font = "28px sans-serif";
     this.ctx.textAlign = "center";
-    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 12);
+    this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 14);
 
     this.ctx.strokeStyle = this.playerCosmetics.ropeColor || "#38bdf8";
     this.ctx.lineWidth = 3;
@@ -366,7 +393,7 @@ export class MountainRenderer {
     this.ctx.stroke();
   }
 
-  // Render Realistic 2D Animated Character Climber (With Joints & Sprite Overlay)
+  // Realistic 2D Animated Character Climber (Human Proportions & Joint Animation)
   drawRealisticClimber(isPlayer) {
     const activeHold = this.getActiveHold(isPlayer);
     if (!activeHold) return;
@@ -411,13 +438,13 @@ export class MountainRenderer {
     this.ctx.lineTo(8, -activeHold.size / 2);
     this.ctx.stroke();
 
-    // 3. Realistic Character Sprite Badge or Anatomical Torso
+    // 3. Realistic Character Sprite Badge / Torso
     if (this.climberSpriteImg.complete && isPlayer) {
       this.ctx.save();
       this.ctx.beginPath();
-      this.ctx.arc(0, 16, 16, 0, Math.PI * 2);
+      this.ctx.arc(0, 16, 18, 0, Math.PI * 2);
       this.ctx.clip();
-      this.ctx.drawImage(this.climberSpriteImg, -16, 0, 32, 32);
+      this.ctx.drawImage(this.climberSpriteImg, -18, -2, 36, 36);
       this.ctx.restore();
     } else {
       this.ctx.fillStyle = bodyColor;
@@ -450,22 +477,21 @@ export class MountainRenderer {
     this.ctx.font = "800 11px Inter, sans-serif";
     this.ctx.fillStyle = isPlayer ? "#10b981" : "#ef4444";
     this.ctx.textAlign = "center";
-    this.ctx.fillText(isPlayer ? "YOU" : "AI BOT", 0, -22);
+    this.ctx.fillText(isPlayer ? "YOU" : "AI BOT", 0, -24);
 
     this.ctx.restore();
   }
 
-  // 🏎️ Nitro Car Highway Race Mode Canvas Renderer
+  // 🏎️ Nitro Car Highway Race Interactive Mode
   drawNitroCarRace(w, h) {
-    // Cyber Highway Sky
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, '#0f172a');
     grad.addColorStop(1, '#0284c7');
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, w, h);
 
-    // Highway Road Lines
-    const roadTop = h * 0.4;
+    // Dynamic Road Asphalt
+    const roadTop = h * 0.35;
     this.ctx.fillStyle = "#1e293b";
     this.ctx.beginPath();
     this.ctx.moveTo(w * 0.3, roadTop);
@@ -475,42 +501,71 @@ export class MountainRenderer {
     this.ctx.closePath();
     this.ctx.fill();
 
-    // Dash lines
+    // Highway Lane Divider Lines (Moving based on WPM speed)
     this.ctx.strokeStyle = "#f59e0b";
     this.ctx.lineWidth = 4;
-    this.ctx.beginPath();
-    this.ctx.moveTo(w * 0.5, roadTop);
-    this.ctx.lineTo(w * 0.5, h);
-    this.ctx.stroke();
+    const laneOffset = (this.climbCycle * 20) % 40;
+    for (let y = roadTop; y < h; y += 40) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(w * 0.5, y + laneOffset);
+      this.ctx.lineTo(w * 0.5, y + laneOffset + 20);
+      this.ctx.stroke();
+    }
 
-    // Render Player Sports Car
+    // Render Sports Car Sprite with Nitro Flame Exhaust!
     if (this.nitroCarImg.complete) {
-      const carX = w * 0.5 - 60;
-      const carY = h - 140;
-      this.ctx.drawImage(this.nitroCarImg, carX, carY, 120, 80);
+      const carX = w * 0.5 - 75;
+      const carY = h - 150;
+      this.ctx.drawImage(this.nitroCarImg, carX, carY, 150, 90);
+
+      // Nitro Exhaust Flame
+      if (this.playerTargetProgress > 0) {
+        this.ctx.fillStyle = "#38bdf8";
+        this.ctx.beginPath();
+        this.ctx.arc(w * 0.5, carY + 90, Math.random() * 8 + 6, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
     }
   }
 
-  // 🚀 Z-Type Space Shooter Canvas Renderer
+  // 🚀 Z-Type Space Shooter Interactive Mode
   drawZTypeSpaceShooter(w, h) {
     this.ctx.fillStyle = "#090d16";
     this.ctx.fillRect(0, 0, w, h);
 
-    // Render Fighter Ship
-    if (this.spaceShipImg.complete) {
-      const shipX = w * 0.5 - 45;
-      const shipY = h - 100;
-      this.ctx.drawImage(this.spaceShipImg, shipX, shipY, 90, 70);
+    // Starfield Background
+    this.ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 40; i++) {
+      const sx = (i * 37) % w;
+      const sy = (i * 53 + this.climbCycle * 10) % h;
+      this.ctx.fillRect(sx, sy, 2, 2);
     }
 
-    // Render Falling Word Asteroids
+    // Render Fighter Starship
+    const shipX = w * 0.5 - 50;
+    const shipY = h - 110;
+    if (this.spaceShipImg.complete) {
+      this.ctx.drawImage(this.spaceShipImg, shipX, shipY, 100, 80);
+    }
+
+    // Render Laser Cannon Beams
+    this.lasers.forEach(l => {
+      this.ctx.strokeStyle = `rgba(56, 189, 248, ${l.alpha})`;
+      this.ctx.lineWidth = 4;
+      this.ctx.beginPath();
+      this.ctx.moveTo(l.x1, l.y1);
+      this.ctx.lineTo(l.x2, l.y2);
+      this.ctx.stroke();
+    });
+
+    // Render Descending Word Asteroids
     this.asteroids.forEach(a => {
       this.ctx.fillStyle = "#ef4444";
       this.ctx.beginPath();
       this.ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
       this.ctx.fill();
 
-      this.ctx.font = "700 14px Fira Code, monospace";
+      this.ctx.font = "800 15px Fira Code, monospace";
       this.ctx.fillStyle = "#f8fafc";
       this.ctx.textAlign = "center";
       this.ctx.fillText(a.word, a.x, a.y - a.radius - 8);
