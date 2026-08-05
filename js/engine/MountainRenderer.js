@@ -1,19 +1,22 @@
-// 5-Layer Environmental Parallax & Mascot Climber Canvas Rendering Engine
+// Advanced 2D Animated Character & Multi-Game Rendering Engine
 
 export class MountainRenderer {
   constructor(canvasElement) {
     this.canvas = canvasElement;
     this.ctx = canvasElement.getContext('2d');
 
-    this.playerVisualProgress = 0; // 0.0 to 1.0
-    this.aiVisualProgress = 0;     // 0.0 to 1.0
+    this.renderMode = "climb"; // "climb", "nitro", "ztype"
 
+    this.playerVisualProgress = 0;
+    this.aiVisualProgress = 0;
     this.playerTargetProgress = 0;
     this.aiTargetProgress = 0;
 
     this.mountainMeta = null;
     this.particles = [];
     this.chalkDustParticles = [];
+    this.asteroids = [];
+    this.lasers = [];
 
     this.playerHolds = [];
     this.aiHolds = [];
@@ -24,6 +27,16 @@ export class MountainRenderer {
     this.animFrameId = null;
     this.climbCycle = 0;
     this.idleBreathe = 0;
+
+    // Load Sprite Images
+    this.climberSpriteImg = new Image();
+    this.climberSpriteImg.src = "assets/images/climber_sprite.jpg";
+
+    this.nitroCarImg = new Image();
+    this.nitroCarImg.src = "assets/images/nitro_car.jpg";
+
+    this.spaceShipImg = new Image();
+    this.spaceShipImg.src = "assets/images/space_ship.jpg";
 
     this.playerCosmetics = {
       skin: "🧗‍♂️",
@@ -36,9 +49,10 @@ export class MountainRenderer {
     window.addEventListener('resize', this.resize);
   }
 
-  init(mountainMeta, cosmetics = {}) {
+  init(mountainMeta, cosmetics = {}, mode = "climb") {
     this.mountainMeta = mountainMeta;
     this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
+    this.renderMode = mode;
 
     this.playerVisualProgress = 0;
     this.aiVisualProgress = 0;
@@ -46,13 +60,10 @@ export class MountainRenderer {
     this.aiTargetProgress = 0;
 
     this.resize();
-    this.generateClimbingHolds();
+    if (mode === "climb") this.generateClimbingHolds();
+    if (mode === "ztype") this.initZTypeAsteroids();
     this.initWeatherParticles();
     this.startLoop();
-  }
-
-  setCosmetics(cosmetics) {
-    this.playerCosmetics = { ...this.playerCosmetics, ...cosmetics };
   }
 
   resize() {
@@ -97,6 +108,21 @@ export class MountainRenderer {
         type: i % 3 === 0 ? 'slate' : (i % 2 === 0 ? 'granite' : 'ledge'),
         size: 14 + (i % 4) * 3,
         ratio
+      });
+    }
+  }
+
+  initZTypeAsteroids() {
+    this.asteroids = [];
+    const words = ["SPECTRUM", "APEX", "NITRO", "CYBER", "VELOCITY", "TITAN", "AURORA"];
+    const w = this.canvas.width;
+    for (let i = 0; i < words.length; i++) {
+      this.asteroids.push({
+        x: Math.random() * (w - 200) + 100,
+        y: -100 - (i * 120),
+        word: words[i],
+        speedY: 0.8 + Math.random() * 0.5,
+        radius: 30
       });
     }
   }
@@ -165,7 +191,7 @@ export class MountainRenderer {
     this.playerVisualProgress += (this.playerTargetProgress - this.playerVisualProgress) * 0.15;
     this.aiVisualProgress += (this.aiTargetProgress - this.aiVisualProgress) * 0.15;
 
-    if (Math.abs(this.playerVisualProgress - oldPlayerVisual) > 0.02) {
+    if (Math.abs(this.playerVisualProgress - oldPlayerVisual) > 0.02 && this.renderMode === "climb") {
       const activeHold = this.getActiveHold(true);
       if (activeHold) this.emitChalkDust(activeHold.x, activeHold.y);
     }
@@ -179,6 +205,13 @@ export class MountainRenderer {
       p.alpha -= 0.03;
       if (p.alpha <= 0) this.chalkDustParticles.splice(idx, 1);
     });
+
+    if (this.renderMode === "ztype") {
+      this.asteroids.forEach(a => {
+        a.y += a.speedY;
+        if (a.y > this.canvas.height) a.y = -100;
+      });
+    }
   }
 
   getActiveHold(isPlayer) {
@@ -205,26 +238,24 @@ export class MountainRenderer {
 
     this.ctx.clearRect(0, 0, w, h);
 
-    // 1. LAYER 1: Celestial Sky Layer
-    this.drawSkyLayer(w, h);
+    if (this.renderMode === "nitro") {
+      this.drawNitroCarRace(w, h);
+    } else if (this.renderMode === "ztype") {
+      this.drawZTypeSpaceShooter(w, h);
+    } else {
+      // Default Mountain Climb Mode
+      this.drawSkyLayer(w, h);
+      this.drawDistantMountains(w, h);
+      this.drawRockWallLayer(w, h);
+      this.drawClimbingHolds();
+      this.drawRopesAndSummit(w, h);
 
-    // 2. LAYER 2: Distant Alpine Mountain Ridges
-    this.drawDistantMountains(w, h);
+      // Render Realistic 2D Character Climbers
+      this.drawRealisticClimber(true);
+      this.drawRealisticClimber(false);
 
-    // 3. LAYER 3: Midground Environmental Pine Trees
-    this.drawPineTrees(w, h);
-
-    // 4. LAYER 4: Foreground Climbing Wall & Holds
-    this.drawRockWallLayer(w, h);
-    this.drawClimbingHolds();
-    this.drawRopesAndSummit(w, h);
-
-    // 5. Mascot Climbers (Player & AI)
-    this.drawMascotClimber(true);
-    this.drawMascotClimber(false);
-
-    // 6. LAYER 5: Weather & Volumetric Fog
-    this.drawParticles(w, h);
+      this.drawParticles(w, h);
+    }
 
     this.ctx.restore();
   }
@@ -255,30 +286,13 @@ export class MountainRenderer {
     this.ctx.fill();
   }
 
-  drawPineTrees(w, h) {
-    // Environmental Pine Trees at Base
-    this.ctx.fillStyle = "rgba(6, 95, 70, 0.5)"; // Alpine green
-    for (let x = 20; x < w; x += 60) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, h);
-      this.ctx.lineTo(x + 15, h - 50);
-      this.ctx.lineTo(x + 30, h);
-      this.ctx.closePath();
-      this.ctx.fill();
-    }
-  }
-
   drawRockWallLayer(w, h) {
     const wallMargin = w * 0.25;
 
-    // Player Track Wall
     this.ctx.fillStyle = "#1e293b";
     this.ctx.fillRect(wallMargin - 55, 0, 110, h);
-
-    // AI Track Wall
     this.ctx.fillRect((w - wallMargin) - 55, 0, 110, h);
 
-    // Wall Texture Lines
     this.ctx.strokeStyle = "rgba(248, 250, 252, 0.05)";
     this.ctx.lineWidth = 1;
     for (let y = 0; y < h; y += 30) {
@@ -310,14 +324,13 @@ export class MountainRenderer {
 
         this.ctx.fill();
 
-        // Chalk Mark on Hold
         this.ctx.fillStyle = "rgba(248, 250, 252, 0.4)";
         this.ctx.fillRect(hold.x - 4, hold.y - 2, 8, 3);
       });
     };
 
-    drawHoldList(this.playerHolds, "#38bdf8"); // Ice Blue
-    drawHoldList(this.aiHolds, "#ef4444");     // Rust Red
+    drawHoldList(this.playerHolds, "#38bdf8");
+    drawHoldList(this.aiHolds, "#ef4444");
   }
 
   drawRopesAndSummit(w, h) {
@@ -328,7 +341,6 @@ export class MountainRenderer {
     const startY = h - 60;
     const summitY = 70;
 
-    // Summit Ledge Line
     this.ctx.strokeStyle = "rgba(248, 250, 252, 0.3)";
     this.ctx.lineWidth = 3;
     this.ctx.beginPath();
@@ -336,12 +348,10 @@ export class MountainRenderer {
     this.ctx.lineTo(w * 0.9, summitY);
     this.ctx.stroke();
 
-    // Summit Flag
     this.ctx.font = "26px sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.fillText(this.playerCosmetics.flagIcon || "🚩", w * 0.5, summitY - 12);
 
-    // Player Rope
     this.ctx.strokeStyle = this.playerCosmetics.ropeColor || "#38bdf8";
     this.ctx.lineWidth = 3;
     this.ctx.beginPath();
@@ -349,7 +359,6 @@ export class MountainRenderer {
     this.ctx.lineTo(playerX, summitY);
     this.ctx.stroke();
 
-    // AI Rope
     this.ctx.strokeStyle = "#ef4444";
     this.ctx.beginPath();
     this.ctx.moveTo(aiX, startY);
@@ -357,8 +366,8 @@ export class MountainRenderer {
     this.ctx.stroke();
   }
 
-  // Render Mascot Climber Snapped to Hold
-  drawMascotClimber(isPlayer) {
+  // Render Realistic 2D Animated Character Climber (With Joints & Sprite Overlay)
+  drawRealisticClimber(isPlayer) {
     const activeHold = this.getActiveHold(isPlayer);
     if (!activeHold) return;
 
@@ -370,73 +379,142 @@ export class MountainRenderer {
     }
 
     this.ctx.save();
-    
-    // Idle breathing offset
-    const breatheY = Math.sin(this.idleBreathe) * 2;
+    const breatheY = Math.sin(this.idleBreathe) * 2.5;
     this.ctx.translate(x, y + breatheY);
 
     const bodyColor = isPlayer ? "#10b981" : "#ef4444";
-    const limbColor = isPlayer ? "#38bdf8" : "#f8fafc";
+    const skinTone = "#fbcfe8";
 
-    const reachOffset = Math.sin(this.climbCycle * 2) * (isPlayer && this.playerTargetProgress > 0 ? 6 : 2);
+    const reachOffset = Math.sin(this.climbCycle * 2) * (isPlayer && this.playerTargetProgress > 0 ? 8 : 3);
 
-    // 1. Reaching Arms
-    this.ctx.strokeStyle = limbColor;
-    this.ctx.lineWidth = 4;
+    // 1. Hands Gripping Hold
+    this.ctx.fillStyle = skinTone;
+    this.ctx.beginPath();
+    this.ctx.arc(-8, -activeHold.size / 2, 4, 0, Math.PI * 2);
+    this.ctx.arc(8, -activeHold.size / 2, 4, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 2. Muscular Articulated Arms Reaching
+    this.ctx.strokeStyle = isPlayer ? "#38bdf8" : "#f8fafc";
+    this.ctx.lineWidth = 5;
     this.ctx.lineCap = "round";
 
     this.ctx.beginPath();
-    this.ctx.moveTo(-6, 8);
-    this.ctx.lineTo(-12, -8 + reachOffset);
-    this.ctx.lineTo(0, -activeHold.size / 2);
+    this.ctx.moveTo(-6, 10);
+    this.ctx.lineTo(-14, -6 + reachOffset);
+    this.ctx.lineTo(-8, -activeHold.size / 2);
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(6, 8);
-    this.ctx.lineTo(12, -8 - reachOffset);
-    this.ctx.lineTo(0, -activeHold.size / 2);
+    this.ctx.moveTo(6, 10);
+    this.ctx.lineTo(14, -6 - reachOffset);
+    this.ctx.lineTo(8, -activeHold.size / 2);
     this.ctx.stroke();
 
-    // 2. Torso
-    this.ctx.fillStyle = bodyColor;
-    this.ctx.beginPath();
-    this.ctx.roundRect(-8, 6, 16, 22, 4);
-    this.ctx.fill();
+    // 3. Realistic Character Sprite Badge or Anatomical Torso
+    if (this.climberSpriteImg.complete && isPlayer) {
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.arc(0, 16, 16, 0, Math.PI * 2);
+      this.ctx.clip();
+      this.ctx.drawImage(this.climberSpriteImg, -16, 0, 32, 32);
+      this.ctx.restore();
+    } else {
+      this.ctx.fillStyle = bodyColor;
+      this.ctx.beginPath();
+      this.ctx.roundRect(-9, 8, 18, 24, 6);
+      this.ctx.fill();
 
-    // 3. Head & Helmet
-    this.ctx.fillStyle = isPlayer ? "#f8fafc" : "#334155";
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, 7, 0, Math.PI * 2);
-    this.ctx.fill();
+      // Head & Helmet
+      this.ctx.fillStyle = isPlayer ? "#38bdf8" : "#334155";
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, 8, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
 
-    // 4. Mascot Expressive Eyes
-    this.ctx.fillStyle = "#0b1120";
-    this.ctx.beginPath();
-    this.ctx.arc(-2, -1, 1.5, 0, Math.PI * 2);
-    this.ctx.arc(2, -1, 1.5, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // 5. Legs
+    // 4. Legs pushing off lower footholds
     this.ctx.strokeStyle = bodyColor;
-    this.ctx.lineWidth = 4;
+    this.ctx.lineWidth = 5;
     
     this.ctx.beginPath();
-    this.ctx.moveTo(-5, 28);
-    this.ctx.lineTo(-10, 42);
+    this.ctx.moveTo(-6, 32);
+    this.ctx.lineTo(-12, 44);
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(5, 28);
-    this.ctx.lineTo(10, 40);
+    this.ctx.moveTo(6, 32);
+    this.ctx.lineTo(12, 42);
     this.ctx.stroke();
 
-    // 6. Label Tag
-    this.ctx.font = "700 10px Inter, sans-serif";
+    // 5. Label Tag
+    this.ctx.font = "800 11px Inter, sans-serif";
     this.ctx.fillStyle = isPlayer ? "#10b981" : "#ef4444";
     this.ctx.textAlign = "center";
     this.ctx.fillText(isPlayer ? "YOU" : "AI BOT", 0, -22);
 
     this.ctx.restore();
+  }
+
+  // 🏎️ Nitro Car Highway Race Mode Canvas Renderer
+  drawNitroCarRace(w, h) {
+    // Cyber Highway Sky
+    const grad = this.ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#0284c7');
+    this.ctx.fillStyle = grad;
+    this.ctx.fillRect(0, 0, w, h);
+
+    // Highway Road Lines
+    const roadTop = h * 0.4;
+    this.ctx.fillStyle = "#1e293b";
+    this.ctx.beginPath();
+    this.ctx.moveTo(w * 0.3, roadTop);
+    this.ctx.lineTo(w * 0.7, roadTop);
+    this.ctx.lineTo(w, h);
+    this.ctx.lineTo(0, h);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    // Dash lines
+    this.ctx.strokeStyle = "#f59e0b";
+    this.ctx.lineWidth = 4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(w * 0.5, roadTop);
+    this.ctx.lineTo(w * 0.5, h);
+    this.ctx.stroke();
+
+    // Render Player Sports Car
+    if (this.nitroCarImg.complete) {
+      const carX = w * 0.5 - 60;
+      const carY = h - 140;
+      this.ctx.drawImage(this.nitroCarImg, carX, carY, 120, 80);
+    }
+  }
+
+  // 🚀 Z-Type Space Shooter Canvas Renderer
+  drawZTypeSpaceShooter(w, h) {
+    this.ctx.fillStyle = "#090d16";
+    this.ctx.fillRect(0, 0, w, h);
+
+    // Render Fighter Ship
+    if (this.spaceShipImg.complete) {
+      const shipX = w * 0.5 - 45;
+      const shipY = h - 100;
+      this.ctx.drawImage(this.spaceShipImg, shipX, shipY, 90, 70);
+    }
+
+    // Render Falling Word Asteroids
+    this.asteroids.forEach(a => {
+      this.ctx.fillStyle = "#ef4444";
+      this.ctx.beginPath();
+      this.ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.font = "700 14px Fira Code, monospace";
+      this.ctx.fillStyle = "#f8fafc";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(a.word, a.x, a.y - a.radius - 8);
+    });
   }
 
   drawParticles(w, h) {

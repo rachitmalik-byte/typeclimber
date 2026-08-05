@@ -1,4 +1,4 @@
-// TypeClimber Main Application Coordinator with WebRTC & Local Network P2P Multiplayer
+// TypeClimber Main Application Coordinator with WebRTC & Arcade Games
 
 import { StorageManager } from './managers/StorageManager.js';
 import { SoundManager } from './engine/SoundManager.js';
@@ -135,7 +135,6 @@ class TypeClimberApp {
       });
     }
 
-    // WebRTC Real-Time Opponent Position Callback
     this.webrtc.onPeerProgress = (ratio, alt, wpm) => {
       this.aiAltitude = alt;
       this.updateAltitudeHUD();
@@ -207,7 +206,7 @@ class TypeClimberApp {
     this.modeManager.setupMatch(mode, mountainId, difficulty);
     const m = this.modeManager.currentMountain;
 
-    document.getElementById("active-mountain-name").textContent = (mode === "boulder") ? "Boulder Arcade" : (mode === "sprint") ? "Speed Sprint" : (mode === "zen") ? "Zen Practice" : (mode === "duel") ? "Local WiFi Duel" : m.name;
+    document.getElementById("active-mountain-name").textContent = (mode === "nitro") ? "Nitro Car Highway" : (mode === "ztype") ? "Z-Type Space Shooter" : (mode === "boulder") ? "Boulder Arcade" : (mode === "sprint") ? "Speed Sprint" : (mode === "zen") ? "Zen Practice" : (mode === "duel") ? "Local WiFi Duel" : m.name;
     const diffTag = document.getElementById("active-mountain-diff");
     if (diffTag) {
       diffTag.textContent = difficulty.toUpperCase();
@@ -230,7 +229,7 @@ class TypeClimberApp {
     };
 
     if (this.renderer) {
-      this.renderer.init(m, cosmetics);
+      this.renderer.init(m, cosmetics, mode);
     }
 
     this.sound.startAmbience(m.weather);
@@ -306,7 +305,6 @@ class TypeClimberApp {
       this.renderer.updateProgress(pRatio, this.aiAltitude / m.altitude);
     }
 
-    // Send WebRTC real-time update to coworker!
     if (this.webrtc && this.webrtc.isConnected) {
       this.webrtc.sendRaceUpdate(pRatio, this.playerAltitude, wpm);
     }

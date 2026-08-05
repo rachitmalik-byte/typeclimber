@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TypeClimber — Mountain Expedition Typing Adventure</title>
+  <title>TypeClimber — Mountain Expedition & Typing Games Arcade</title>
   <meta name="description" content="A commercial-grade mountain climbing typing adventure game. Race AI rival climbers up vertical granite peaks with speed, precision, and rhythm.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,9 +76,9 @@
           </div>
           
           <div class="hero-content-overlay">
-            <div class="expedition-badge">MOUNTAIN CLIMBING ADVENTURE</div>
+            <div class="expedition-badge">MOUNTAIN CLIMBING & TYPING ARCADE</div>
             <h1 class="hero-game-title">CONQUER THE <span class="accent-title">SUMMIT</span></h1>
-            <p class="hero-game-subtitle">Race rival climbers up vertical granite cliffs. Your typing speed fuels physical leaps from hold to hold; flawless accuracy maintains momentum.</p>
+            <p class="hero-game-subtitle">Race rival climbers up vertical granite cliffs, drift in Nitro Car Races, and blast asteroid words in Z-Type Space Shooter!</p>
 
             <div class="hero-button-group">
               <button id="btn-play-campaign" class="btn game-btn primary-game-btn magnetic-btn">
@@ -94,7 +94,31 @@
 
         <!-- Illustrated Game Mode Cards Carousel/Grid -->
         <div class="illustrated-mode-grid">
-          
+
+          <div class="game-world-card" data-mode="nitro">
+            <div class="world-card-banner nitro-banner">
+              <div class="banner-tag">CAR RACE</div>
+              <div class="world-icon">🏎️</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Nitro Car Highway Sprint</h3>
+              <p>Type fast to rev sports car engines and ignite nitro thruster boosts!</p>
+              <button class="btn btn-sm card-play-btn">Race Cars ➔</button>
+            </div>
+          </div>
+
+          <div class="game-world-card" data-mode="ztype">
+            <div class="world-card-banner ztype-banner">
+              <div class="banner-tag">SPACE SHOOTER</div>
+              <div class="world-icon">🚀</div>
+            </div>
+            <div class="world-card-body">
+              <h3>Z-Type Space Shooter</h3>
+              <p>Fire cyan laser cannons to blast descending asteroid words in orbit!</p>
+              <button class="btn btn-sm card-play-btn">Blast Space ➔</button>
+            </div>
+          </div>
+
           <div class="game-world-card" data-mode="boulder">
             <div class="world-card-banner boulder-banner">
               <div class="banner-tag">ARCADE</div>
@@ -128,30 +152,6 @@
               <h3>Zen Practice</h3>
               <p>Pressure-free alpine typing with instant rhythm diagnostics.</p>
               <button class="btn btn-sm card-play-btn">Practice ➔</button>
-            </div>
-          </div>
-
-          <div class="game-world-card" data-mode="timeattack">
-            <div class="world-card-banner clock-banner">
-              <div class="banner-tag">CLOCK</div>
-              <div class="world-icon">⏱️</div>
-            </div>
-            <div class="world-card-body">
-              <h3>Time Attack</h3>
-              <p>Type against 60s, 120s, or 300s mountain timers for high scores.</p>
-              <button class="btn btn-sm card-play-btn">Race Clock ➔</button>
-            </div>
-          </div>
-
-          <div class="game-world-card" data-mode="survival">
-            <div class="world-card-banner survival-banner">
-              <div class="banner-tag">ENDLESS</div>
-              <div class="world-icon">🔥</div>
-            </div>
-            <div class="world-card-body">
-              <h3>Endless Survival</h3>
-              <p>Accelerating AI speed and harsh weather. How high can you climb?</p>
-              <button class="btn btn-sm card-play-btn">Survive ➔</button>
             </div>
           </div>
 
@@ -257,7 +257,6 @@
 
       <!-- 4. ACTIVE GAMEPLAY SCREEN -->
       <section id="game-screen" class="screen">
-        <!-- Ready Keystroke Start Banner (Starts ONLY when user types first key) -->
         <div id="ready-start-banner" class="ready-banner">
           <span class="pulse-text">TYPE ANY KEY TO START RACE</span>
         </div>
@@ -301,7 +300,7 @@
 
         <!-- Split Game Viewport -->
         <div class="game-viewport-split">
-          <!-- Canvas Climbing Wall Viewport -->
+          <!-- Canvas Viewport -->
           <div class="mountain-canvas-wrapper">
             <canvas id="mountain-canvas"></canvas>
             <div id="weather-effect-overlay" class="weather-overlay"></div>

@@ -22,7 +22,6 @@ export class UIManager {
   }
 
   bindEvents() {
-    // Top-Left Logo Click Handler -> Returns to Base Camp
     if (this.logoHome) {
       this.logoHome.addEventListener("click", (e) => {
         e.preventDefault();
@@ -32,7 +31,6 @@ export class UIManager {
       });
     }
 
-    // Global Header Back Button -> Pops previous screen history
     if (this.backBtn) {
       this.backBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -41,7 +39,6 @@ export class UIManager {
       });
     }
 
-    // Quick Mute Button
     const muteBtn = document.getElementById("quick-mute-btn");
     if (muteBtn) {
       muteBtn.addEventListener("click", () => {
@@ -49,7 +46,6 @@ export class UIManager {
       });
     }
 
-    // Quick Settings Button
     const quickSettingsBtn = document.getElementById("quick-settings-btn");
     if (quickSettingsBtn) {
       quickSettingsBtn.addEventListener("click", () => {
@@ -57,9 +53,7 @@ export class UIManager {
       });
     }
 
-    // Reliable Global Click Delegation for all buttons & cards
     document.addEventListener("click", (e) => {
-      // 1. Play Button Campaign
       const btnCampaign = e.target.closest("#btn-play-campaign");
       if (btnCampaign) {
         this.app.sound.playButtonClick();
@@ -67,7 +61,6 @@ export class UIManager {
         return;
       }
 
-      // 2. Play Button Freeplay
       const btnFreeplay = e.target.closest("#btn-play-freeplay");
       if (btnFreeplay) {
         this.app.sound.playButtonClick();
@@ -75,12 +68,14 @@ export class UIManager {
         return;
       }
 
-      // 3. Mode Cards (Boulder Dodge, Speed Sprint, Zen, Time Attack, Survival, Multiplayer)
+      // Mode Cards (Nitro Car Race, Z-Type Space Shooter, Boulder Dodge, Speed Sprint, Zen, Time Attack, Survival, Multiplayer)
       const modeCard = e.target.closest(".game-world-card");
       if (modeCard) {
         const mode = modeCard.dataset.mode;
         this.app.sound.playButtonClick();
-        if (mode === "boulder") this.app.startGame("boulder", "rocky-cliffs", "medium");
+        if (mode === "nitro") this.app.startGame("nitro", "green-hills", "medium");
+        else if (mode === "ztype") this.app.startGame("ztype", "snow-mountain", "hard");
+        else if (mode === "boulder") this.app.startGame("boulder", "rocky-cliffs", "medium");
         else if (mode === "sprint") this.app.startGame("sprint", "green-hills", "easy");
         else if (mode === "zen") this.app.startGame("zen", "green-hills", "easy");
         else if (mode === "timeattack") this.app.startGame("timeattack", "snow-mountain", "hard");
@@ -89,7 +84,6 @@ export class UIManager {
         return;
       }
 
-      // 4. Subnav Buttons
       const lockerBtn = e.target.closest("#menu-btn-locker");
       if (lockerBtn) { this.app.sound.playButtonClick(); this.showScreen("locker-screen"); return; }
 
@@ -102,7 +96,6 @@ export class UIManager {
       const setBtn = e.target.closest("#menu-btn-settings");
       if (setBtn) { this.app.sound.playButtonClick(); this.showScreen("settings-screen"); return; }
 
-      // 5. Campaign Mountain Climb Button
       const climbPeakBtn = e.target.closest(".climb-peak-btn");
       if (climbPeakBtn) {
         const mountainId = climbPeakBtn.dataset.mountainId;
@@ -111,7 +104,6 @@ export class UIManager {
         return;
       }
 
-      // 6. Difficulty Start Button
       const startDiffBtn = e.target.closest(".start-diff-btn");
       if (startDiffBtn) {
         const diff = startDiffBtn.dataset.diff;
@@ -121,7 +113,6 @@ export class UIManager {
         return;
       }
 
-      // 7. Pause Button
       const pauseBtn = e.target.closest("#game-pause-btn");
       if (pauseBtn) {
         this.app.sound.playButtonClick();
@@ -129,7 +120,6 @@ export class UIManager {
         return;
       }
 
-      // 8. Modal Action Buttons
       const modalNext = e.target.closest("#modal-btn-next");
       if (modalNext) {
         this.app.sound.playButtonClick();
@@ -152,7 +142,6 @@ export class UIManager {
         return;
       }
 
-      // 9. Pause Modal Controls
       const pauseResume = e.target.closest("#pause-btn-resume");
       if (pauseResume) { this.app.resumeGame(); return; }
 
@@ -162,7 +151,6 @@ export class UIManager {
       const pauseQuit = e.target.closest("#pause-btn-quit");
       if (pauseQuit) { this.app.closeModal(); this.showScreen("main-menu-screen"); return; }
 
-      // 10. Local Duel Start & Ranked Race Start
       const btnRanked = e.target.closest("#btn-start-ranked-match");
       if (btnRanked) {
         this.app.sound.playButtonClick();
@@ -177,7 +165,6 @@ export class UIManager {
         return;
       }
 
-      // 11. Reset Data
       const btnReset = e.target.closest("#btn-reset-data");
       if (btnReset) {
         if (confirm("Are you sure you want to reset all progress, coins, and settings?")) {
@@ -191,7 +178,6 @@ export class UIManager {
       }
     });
 
-    // Settings Sliders & Inputs
     const sfxSlider = document.getElementById("slider-sfx-vol");
     const musicSlider = document.getElementById("slider-music-vol");
     const ambSlider = document.getElementById("slider-ambience-vol");
@@ -233,7 +219,6 @@ export class UIManager {
       });
     }
 
-    // Locker Category Tabs
     const lockerTabs = document.querySelectorAll(".locker-tab-btn");
     lockerTabs.forEach(tab => {
       tab.addEventListener("click", () => {
@@ -243,7 +228,6 @@ export class UIManager {
       });
     });
 
-    // Achievement Tabs
     const tabAch = document.getElementById("tab-btn-achievements");
     const tabDaily = document.getElementById("tab-btn-dailies");
     const achGrid = document.getElementById("achievements-list-grid");
@@ -266,7 +250,6 @@ export class UIManager {
     }
   }
 
-  // Magnetic Button Hover & Card Tilt Mechanics
   bindMagneticHoverAndTilt() {
     document.querySelectorAll(".magnetic-btn").forEach(btn => {
       btn.addEventListener("mousemove", (e) => {
@@ -293,7 +276,6 @@ export class UIManager {
   }
 
   updateMuteIcon() {
-    const icon = document.getElementById("mute-icon-svg");
     const btn = document.getElementById("quick-mute-btn");
     if (this.app.sound.isMuted) {
       if (btn) btn.classList.add("muted");
